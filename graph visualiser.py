@@ -12,6 +12,7 @@ import pygame
 WIN = pygame.display.set_mode((500, 500))
 GRID_SIZE = 10
 
+
 class Node:
     def __init__(self, value: int, x: int, y: int):
         self.x = x
