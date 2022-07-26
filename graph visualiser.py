@@ -1,9 +1,3 @@
-# First networkx library is imported
-# along with matplotlib
-from lib2to3.pgen2.token import NUMBER
-from tkinter import Grid
-import networkx as nx
-import matplotlib.pyplot as plt
 from random import randint
 from math import sqrt
 import pygame
