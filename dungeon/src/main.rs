@@ -13,10 +13,10 @@ macro_rules! NUM_NODES {
     };
 }
 
-#[derive(Eq, PartialEq, Hash, Clone)]
+#[derive(Eq, PartialEq, Hash, Clone, Debug)]
 struct Tile {}
 
-#[derive(Eq, Hash, PartialEq, Clone)]
+#[derive(Eq, Hash, PartialEq, Clone, Debug)]
 struct Node {
     x: usize,
     y: usize,
@@ -28,7 +28,8 @@ fn closest_node(nodes: &HashSet<Node>, current_node: &Node) -> Option<Node> {
     let mut closest_node: Option<Node> = None;
     let mut closest_distance = f32::INFINITY as usize;
     for node in nodes {
-        let distance = (current_node.x - node.x).pow(2) + (current_node.y - node.y).pow(2);
+        let distance = ((current_node.x as isize - node.x as isize).pow(2)
+            + (current_node.y as isize - node.y as isize).pow(2)) as usize;
         if distance < closest_distance {
             closest_distance = distance;
             closest_node = Some(node.clone());
@@ -61,7 +62,7 @@ impl Graph {
 
     fn create_nodes(&mut self) {
         let mut locations: HashSet<(usize, usize)> = HashSet::new();
-        while self.nodes.len() > NUM_NODES!() {
+        while self.nodes.len() < NUM_NODES!() {
             let (x, y) = (
                 ::rand::thread_rng().gen_range(0..GRID_SIZE),
                 ::rand::thread_rng().gen_range(0..GRID_SIZE),
@@ -93,8 +94,9 @@ impl Graph {
 
             for visited_node in &visited_nodes {
                 let closest = closest_node(&unconnected_nodes, &visited_node).unwrap();
-                let distance =
-                    (closest.x - visited_node.x).pow(2) + (closest.y - visited_node.y).pow(2);
+                let distance = ((closest.x as isize - visited_node.x as isize).pow(2)
+                    + (closest.y as isize - visited_node.y as isize).pow(2))
+                    as usize;
                 if distance < closest_distance {
                     closest_distance = distance;
                     current_closest_node_pair = Some((visited_node.clone(), closest));
@@ -113,11 +115,12 @@ impl Graph {
 }
 
 fn draw_graph(graph: &Graph) {
-    let multiplier = screen_height() / NUM_NODES!() as f32;
+    let multiplier = screen_height() / GRID_SIZE as f32;
     for node in &graph.nodes {
+        // println!("Drawing node at {}, {}", node.x, node.y
         draw_circle(
-            node.x as f32 * multiplier,
-            node.y as f32 * multiplier,
+            node.x as f32 * multiplier + NODE_SIZE,
+            node.y as f32 * multiplier + NODE_SIZE,
             NODE_SIZE,
             BLUE,
         )
@@ -125,17 +128,26 @@ fn draw_graph(graph: &Graph) {
 
     for (node_1, node_2) in &graph.edges {
         draw_line(
-            node_1.x as f32,
-            node_1.y as f32,
-            node_2.x as f32,
-            node_2.y as f32,
+            node_1.x as f32 * multiplier + NODE_SIZE,
+            node_1.y as f32 * multiplier + NODE_SIZE,
+            node_2.x as f32 * multiplier + NODE_SIZE,
+            node_2.y as f32 * multiplier + NODE_SIZE,
             EDGE_SIZE,
             BLACK,
         )
     }
 }
 
-#[macroquad::main("BasicShapes")]
+fn keyboard_actions(graph: &mut Graph) {
+    if is_key_down(KeyCode::R) {
+        graph.edges = HashSet::new();
+        graph.nodes = HashSet::new();
+        graph.create_nodes();
+        graph.connect_nodes();
+    }
+}
+
+#[macroquad::main("MapMaker")]
 async fn main() {
     let mut graph = Graph {
         nodes: HashSet::new(),
@@ -144,6 +156,7 @@ async fn main() {
     graph.create_nodes();
     graph.connect_nodes();
     loop {
+        keyboard_actions(&mut graph);
         clear_background(WHITE);
         draw_graph(&graph);
         next_frame().await
