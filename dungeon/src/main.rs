@@ -14,7 +14,18 @@ macro_rules! NUM_NODES {
 }
 
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
-struct Tile {}
+struct Tile {
+    contains_player: bool,
+    contains_goal: bool,
+    enemy: Option<Enemy>,
+    treasure: Option<Treasure>,
+}
+
+#[derive(Eq, PartialEq, Hash, Clone, Debug)]
+struct Enemy {}
+
+#[derive(Eq, PartialEq, Hash, Clone, Debug)]
+struct Treasure {}
 
 #[derive(Eq, Hash, PartialEq, Clone, Debug)]
 struct Node {
@@ -72,7 +83,12 @@ impl Graph {
                     x: x,
                     y: y,
                     neighbors: vec![],
-                    value: Tile {},
+                    value: Tile {
+                        contains_player: false,
+                        contains_goal: false,
+                        enemy: None,
+                        treasure: None,
+                    },
                 });
             }
         }
@@ -118,12 +134,28 @@ fn draw_graph(graph: &Graph) {
     let multiplier = screen_height() / GRID_SIZE as f32;
     for node in &graph.nodes {
         // println!("Drawing node at {}, {}", node.x, node.y
-        draw_circle(
-            node.x as f32 * multiplier + NODE_SIZE,
-            node.y as f32 * multiplier + NODE_SIZE,
-            NODE_SIZE,
-            BLUE,
-        )
+        if node.value.contains_player {
+            draw_circle(
+                node.x as f32 * multiplier,
+                node.y as f32 * multiplier,
+                NODE_SIZE,
+                RED,
+            );
+        } else if node.value.contains_goal {
+            draw_circle(
+                node.x as f32 * multiplier,
+                node.y as f32 * multiplier,
+                NODE_SIZE,
+                GREEN,
+            );
+        } else {
+            draw_circle(
+                node.x as f32 * multiplier,
+                node.y as f32 * multiplier,
+                NODE_SIZE,
+                BLUE,
+            );
+        }
     }
 
     for (node_1, node_2) in &graph.edges {
