@@ -59,7 +59,7 @@ def create_nodes(grid_size: int, num_nodes: int):
 
 
 NUMBER_NODES = round(GRID_SIZE ** (3 / 2))
-NUMBER_NODES = GRID_SIZE**2
+# NUMBER_NODES = GRID_SIZE**2
 create_nodes(GRID_SIZE, NUMBER_NODES)
 
 unconnected_nodes = graph.nodes.copy()
