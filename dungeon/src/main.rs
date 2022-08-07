@@ -1,3 +1,4 @@
+use ::rand::seq::SliceRandom;
 use ::rand::Rng;
 use macroquad::prelude::*;
 use std::collections::HashSet;
@@ -29,54 +30,57 @@ struct Treasure {}
 
 #[derive(Eq, Hash, PartialEq, Clone, Debug)]
 struct Node {
-    x: usize,
-    y: usize,
+    x: isize,
+    y: isize,
     value: Tile,
     neighbors: Vec<Node>,
 }
 
-fn closest_node(nodes: &HashSet<Node>, current_node: &Node) -> Option<Node> {
-    let mut closest_node: Option<Node> = None;
-    let mut closest_distance = f32::INFINITY as usize;
-    for node in nodes {
-        let distance = ((current_node.x as isize - node.x as isize).pow(2)
-            + (current_node.y as isize - node.y as isize).pow(2)) as usize;
-        if distance < closest_distance {
-            closest_distance = distance;
-            closest_node = Some(node.clone());
-        }
-    }
-    closest_node
-}
-
 struct Graph {
-    nodes: HashSet<Node>,
-    edges: HashSet<(Node, Node)>,
+    nodes: Vec<Node>,
+    edges: Vec<(usize, usize)>,
 }
 
 impl Graph {
     fn add_node(&mut self, node: Node) {
-        self.nodes.insert(node);
+        self.nodes.push(node);
     }
 
-    fn add_edge(&mut self, node_1: Node, node_2: Node) {
-        self.edges.insert((node_1, node_2));
+    fn add_edge(&mut self, node_1: usize, node_2: usize) {
+        self.edges.push((node_1, node_2));
     }
-    fn _get_node(&self, x: usize, y: usize) -> Option<Node> {
-        for node in &self.nodes {
+    fn get_node(&mut self, x: isize, y: isize) -> Option<usize> {
+        for (index, node) in self.nodes.iter().enumerate() {
             if node.x == x && node.y == y {
-                return Some(node.clone());
+                return Some(index);
             }
         }
         return None;
     }
 
+    fn closest_node(&self, node_indices: &Vec<usize>, current_node_index: &usize) -> Option<usize> {
+        let current_node = &self.nodes[*current_node_index];
+        let mut closest_node: Option<usize> = None;
+        let mut closest_distance = f32::INFINITY as usize;
+        for index in node_indices {
+            let node = &self.nodes[*index];
+            let distance = ((current_node.x as isize - node.x as isize).pow(2)
+                + (current_node.y as isize - node.y as isize).pow(2))
+                as usize;
+            if distance < closest_distance {
+                closest_distance = distance;
+                closest_node = Some(*index);
+            }
+        }
+        closest_node
+    }
+
     fn create_nodes(&mut self) {
-        let mut locations: HashSet<(usize, usize)> = HashSet::new();
+        let mut locations: HashSet<(isize, isize)> = HashSet::new();
         while self.nodes.len() < NUM_NODES!() {
             let (x, y) = (
-                ::rand::thread_rng().gen_range(0..GRID_SIZE),
-                ::rand::thread_rng().gen_range(0..GRID_SIZE),
+                ::rand::thread_rng().gen_range(0..GRID_SIZE) as isize,
+                ::rand::thread_rng().gen_range(0..GRID_SIZE) as isize,
             );
             if locations.insert((x, y)) {
                 self.add_node(Node {
@@ -95,70 +99,71 @@ impl Graph {
     }
 
     fn connect_nodes(&mut self) {
-        let mut unconnected_nodes = self.nodes.clone();
-        let mut visited_nodes: HashSet<Node> = HashSet::new();
-        let beginning_node = match unconnected_nodes.iter().next() {
-            Some(node) => node.clone(),
+        let mut unconnected_nodes: Vec<usize> = (0..self.nodes.len()).collect();
+        let mut visited_nodes: Vec<usize> = Vec::new();
+        visited_nodes.push(match unconnected_nodes.pop() {
+            Some(index) => index,
             None => return,
-        };
-        unconnected_nodes.remove(&beginning_node);
-        visited_nodes.insert(beginning_node);
-
+        });
         while unconnected_nodes.len() > 0 {
             let mut closest_distance = f32::INFINITY as usize;
-            let mut current_closest_node_pair: Option<(Node, Node)> = None;
-
-            for visited_node in &visited_nodes {
-                let closest = closest_node(&unconnected_nodes, &visited_node).unwrap();
-                let distance = ((closest.x as isize - visited_node.x as isize).pow(2)
-                    + (closest.y as isize - visited_node.y as isize).pow(2))
+            let mut current_closest_node_pair: Option<(usize, usize)> = None;
+            for node in &visited_nodes {
+                let closest_node = self.closest_node(&unconnected_nodes, &node).unwrap();
+                let distance = ((self.nodes[*node].x - self.nodes[closest_node].x).pow(2)
+                    + (self.nodes[*node].y - self.nodes[closest_node].y).pow(2))
                     as usize;
                 if distance < closest_distance {
                     closest_distance = distance;
-                    current_closest_node_pair = Some((visited_node.clone(), closest));
+                    current_closest_node_pair = Some((*node, closest_node));
                 }
             }
+
             match current_closest_node_pair {
-                None => return,
-                Some(node_pair) => {
-                    let (node_1, node_2) = node_pair;
-                    visited_nodes.insert(unconnected_nodes.take(&node_2).unwrap());
-                    self.add_edge(node_1, node_2);
+                Some((visited_node, non_visited_node)) => {
+                    self.add_edge(visited_node, non_visited_node);
+                    visited_nodes.push(non_visited_node);
+                    unconnected_nodes.retain(|index| *index != non_visited_node);
                 }
+                None => return,
             }
         }
+    }
+
+    fn populate_board(&mut self) {
+        let mut unpopulated_nodes: Vec<usize> = (0..self.nodes.len()).collect();
+        unpopulated_nodes.shuffle(&mut ::rand::thread_rng());
+
+        let player_index = unpopulated_nodes.pop().unwrap();
+        self.nodes[player_index].value.contains_player = true;
+
+        let goal_index = unpopulated_nodes.pop().unwrap();
+        self.nodes[goal_index].value.contains_goal = true;
     }
 }
 
 fn draw_graph(graph: &Graph) {
     let multiplier = screen_height() / GRID_SIZE as f32;
     for node in &graph.nodes {
-        // println!("Drawing node at {}, {}", node.x, node.y
-        if node.value.contains_player {
-            draw_circle(
-                node.x as f32 * multiplier,
-                node.y as f32 * multiplier,
-                NODE_SIZE,
-                RED,
-            );
+        let color = if node.value.contains_player {
+            RED
         } else if node.value.contains_goal {
-            draw_circle(
-                node.x as f32 * multiplier,
-                node.y as f32 * multiplier,
-                NODE_SIZE,
-                GREEN,
-            );
+            GREEN
         } else {
-            draw_circle(
-                node.x as f32 * multiplier,
-                node.y as f32 * multiplier,
-                NODE_SIZE,
-                BLUE,
-            );
-        }
+            BLUE
+        };
+
+        draw_circle(
+            node.x as f32 * multiplier + NODE_SIZE,
+            node.y as f32 * multiplier + NODE_SIZE,
+            NODE_SIZE,
+            color,
+        );
     }
 
-    for (node_1, node_2) in &graph.edges {
+    for (node_index_1, node_index_2) in &graph.edges {
+        let node_1 = &graph.nodes[*node_index_1];
+        let node_2 = &graph.nodes[*node_index_2];
         draw_line(
             node_1.x as f32 * multiplier + NODE_SIZE,
             node_1.y as f32 * multiplier + NODE_SIZE,
@@ -172,23 +177,43 @@ fn draw_graph(graph: &Graph) {
 
 fn keyboard_actions(graph: &mut Graph) {
     if is_key_down(KeyCode::R) {
-        graph.edges = HashSet::new();
-        graph.nodes = HashSet::new();
+        graph.edges = Vec::new();
+        graph.nodes = Vec::new();
         graph.create_nodes();
         graph.connect_nodes();
+        graph.populate_board();
+    }
+}
+
+fn mouse_events(graph: &mut Graph) {
+    if is_mouse_button_down(MouseButton::Left) {
+        let (mouse_x, mouse_y) = mouse_position();
+        let multiplier = screen_height() / GRID_SIZE as f32;
+        let (x, y) = (
+            ((mouse_x) / multiplier) as isize,
+            ((mouse_y) / multiplier) as isize,
+        );
+        if let Some(node) = graph.get_node(x, y) {
+            for node in &mut graph.nodes {
+                node.value.contains_player = false;
+            }
+            graph.nodes[node].value.contains_player = true;
+        }
     }
 }
 
 #[macroquad::main("MapMaker")]
 async fn main() {
     let mut graph = Graph {
-        nodes: HashSet::new(),
-        edges: HashSet::new(),
+        nodes: Vec::new(),
+        edges: Vec::new(),
     };
     graph.create_nodes();
     graph.connect_nodes();
+    graph.populate_board();
     loop {
         keyboard_actions(&mut graph);
+        mouse_events(&mut graph);
         clear_background(WHITE);
         draw_graph(&graph);
         next_frame().await
