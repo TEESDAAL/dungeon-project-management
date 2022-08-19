@@ -8,13 +8,17 @@ const EDGE_SIZE: f32 = 2.;
 fn draw_graph(graph: &Graph) {
     let multiplier = screen_height() / GRID_SIZE as f32;
     for node in &graph.nodes {
-        let color = match &node.value {
+        let mut color = match &node.value {
             Tile::Empty => BLUE,
             Tile::Treasure(_) => GOLD,
             Tile::Enemy(_) => RED,
-            Tile::Player => GREEN,
-            Tile::Goal => PURPLE,
         };
+
+        if graph.current_player_position.unwrap() == node.index {
+            color = GREEN;
+        } else if graph.goal_position.unwrap() == node.index {
+            color = PURPLE;
+        }
 
         draw_circle(
             node.x as f32 * multiplier + NODE_SIZE,
@@ -56,18 +60,19 @@ fn mouse_events(graph: &mut Graph, path: &mut Vec<usize>) {
             ((mouse_y - NODE_SIZE) / multiplier).round() as isize,
         );
         if let Some(end_node) = graph.get_node(x, y) {
-            *path = graph.get_path(graph.current_player_position.clone(), end_node);
+            *path = graph.get_path(graph.current_player_position.unwrap().clone(), end_node);
         }
     }
 }
 
 fn move_player(graph: &mut Graph, last_run: &mut Instant, index: usize, path: &mut Vec<usize>) {
-    graph.nodes[graph.current_player_position].value = Tile::Empty;
-    if graph.nodes[index].value == Tile::Goal {
+    graph.nodes[graph.current_player_position.unwrap()].value = Tile::Empty;
+    
+    if index == graph.goal_position.unwrap() && path.last() == None {
         reload(graph, path);
     }
-    graph.nodes[index].value = Tile::Player;
-    graph.current_player_position = index;
+    // graph.nodes[index].value = Tile::Player;
+    graph.current_player_position = Some(index);
     *last_run = Instant::now();
 }
 
@@ -87,7 +92,7 @@ async fn main() {
         mouse_events(&mut graph, &mut path);
         if path.len() > 0 {
             let distance = get_distance(
-                &graph.nodes[graph.current_player_position],
+                &graph.nodes[graph.current_player_position.unwrap()],
                 &graph.nodes[path[path.len() - 1]],
             );
             if last_run.elapsed()

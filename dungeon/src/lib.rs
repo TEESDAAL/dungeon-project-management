@@ -14,11 +14,11 @@ macro_rules! NUM_NODES {
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub enum Tile {
     Empty,
-    Player,
-    Goal,
     Enemy(Enemy),
     Treasure(Treasure),
 }
+
+
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub struct Enemy {}
 
@@ -31,18 +31,21 @@ pub struct Node {
     pub y: isize,
     pub value: Tile,
     pub neighbors: Vec<usize>,
+    pub index: usize,
 }
 
 pub struct Graph {
     pub nodes: Vec<Node>,
-    pub current_player_position: usize,
+    pub current_player_position: Option<usize>,
+    pub goal_position: Option<usize>,
 }
 
 impl Graph {
     pub fn new() -> Graph {
         let mut graph = Graph {
             nodes: Vec::new(),
-            current_player_position: 0,
+            current_player_position: None,
+            goal_position: None,
         };
         graph.create_nodes();
         graph.connect_nodes();
@@ -104,6 +107,7 @@ impl Graph {
                     y: y,
                     neighbors: vec![],
                     value: Tile::Empty,
+                    index: self.nodes.len(),
                 });
             }
         }
@@ -148,11 +152,12 @@ impl Graph {
         unpopulated_nodes.shuffle(&mut rand::thread_rng());
 
         let player_index = unpopulated_nodes.pop().unwrap();
-        self.current_player_position = player_index;
-        self.nodes[player_index].value = Tile::Player;
+        self.current_player_position = Some(player_index);
+        // self.nodes[player_index].value = Tile::Player;
 
         let goal_index = unpopulated_nodes.pop().unwrap();
-        self.nodes[goal_index].value = Tile::Goal;
+        self.goal_position = Some(goal_index);
+        // self.nodes[goal_index].value = Tile::Goal;
     }
 
     pub fn get_path(&self, start_node: usize, end_node: usize) -> Vec<usize> {
