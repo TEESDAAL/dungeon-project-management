@@ -155,7 +155,12 @@ impl Graph {
         self.current_player_position = Some(player_index);
         // self.nodes[player_index].value = Tile::Player;
 
-        let goal_index = unpopulated_nodes.pop().unwrap();
+        let mut goal_index = unpopulated_nodes.pop().unwrap();
+        if goal_index == player_index{
+            println!("How?");
+            goal_index = unpopulated_nodes.pop().unwrap();
+        }
+
         self.goal_position = Some(goal_index);
         // self.nodes[goal_index].value = Tile::Goal;
     }

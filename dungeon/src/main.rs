@@ -67,9 +67,10 @@ fn mouse_events(graph: &mut Graph, path: &mut Vec<usize>) {
 
 fn move_player(graph: &mut Graph, last_run: &mut Instant, index: usize, path: &mut Vec<usize>) {
     graph.nodes[graph.current_player_position.unwrap()].value = Tile::Empty;
-    
+
     if index == graph.goal_position.unwrap() && path.last() == None {
         reload(graph, path);
+        return
     }
     // graph.nodes[index].value = Tile::Player;
     graph.current_player_position = Some(index);
