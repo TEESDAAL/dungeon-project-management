@@ -20,22 +20,42 @@ fn draw_sentance(sentance: &Vec<char>, user_sentance: &mut Vec<char>) {
                 if c == s {
                     draw_text(&c.to_string(), (spacing * i) as f32, 50., font_size, GREEN);
                     if c == &' ' {
-                        draw_rectangle((spacing * i) as f32, 50. - font_size/2., spacing as f32 - 5., font_size/2., Color::from_rgba(0,200,0,100));
+                        draw_rectangle(
+                            (spacing * i) as f32,
+                            50. - font_size / 2.,
+                            spacing as f32 - 5.,
+                            font_size / 2.,
+                            Color::from_rgba(0, 200, 0, 100),
+                        );
                     }
                 } else {
                     draw_text(&c.to_string(), (spacing * i) as f32, 50., font_size, RED);
                     if c == &' ' {
-                        draw_rectangle((spacing * i) as f32, 50. - font_size/2., spacing as f32 - 5., font_size/2., Color::from_rgba(200,0,0,100));
+                        draw_rectangle(
+                            (spacing * i) as f32,
+                            50. - font_size / 2.,
+                            spacing as f32 - 5.,
+                            font_size / 2.,
+                            Color::from_rgba(200, 0, 0, 100),
+                        );
                     }
                 }
             }
             (Some(c), None) => {
                 draw_text(&c.to_string(), (spacing * i) as f32, 50., font_size, RED);
                 if c == &' ' {
-                    draw_rectangle((spacing * i) as f32, 50. - font_size/2., spacing as f32 - 5., font_size/2., Color::from_rgba(200,0,0,100));
+                    draw_rectangle(
+                        (spacing * i) as f32,
+                        50. - font_size / 2.,
+                        spacing as f32 - 5.,
+                        font_size / 2.,
+                        Color::from_rgba(200, 0, 0, 100),
+                    );
                 }
-            },
-            (None, Some(s)) => draw_text(&s.to_string(), (spacing * i) as f32, 50., font_size, GRAY),
+            }
+            (None, Some(s)) => {
+                draw_text(&s.to_string(), (spacing * i) as f32, 50., font_size, GRAY)
+            }
             (None, None) => break,
         }
     }
