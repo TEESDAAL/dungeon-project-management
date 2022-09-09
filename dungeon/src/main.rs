@@ -2,11 +2,15 @@ pub mod map;
 use crate::map::*;
 pub mod combat;
 use crate::combat::*;
-
+pub mod sentences;
+use crate::sentences::*;
+use ::rand::seq::SliceRandom;
+use futures::join;
 use macroquad::prelude::*;
 use std::time::{Duration, Instant};
 
 enum GameState {
+    LoadTextures,
     MainMap,
     EnterCombat,
     Combat,
@@ -15,7 +19,7 @@ enum GameState {
 
 impl GameState {
     fn new() -> GameState {
-        GameState::MainMap
+        GameState::LoadTextures
     }
 }
 
@@ -49,24 +53,6 @@ fn move_player(
     }
 }
 
-struct Player {
-    _stamina: i32,
-    _health: i32,
-    _defense: i32,
-    sentence: Vec<char>,
-}
-
-impl Player {
-    fn new() -> Player {
-        Player {
-            _stamina: 50,
-            _health: 100,
-            _defense: 100,
-            sentence: vec![],
-        }
-    }
-}
-
 #[macroquad::main("MapMaker")]
 async fn main() {
     let mut player = Player::new();
@@ -74,15 +60,21 @@ async fn main() {
     let mut graph = Graph::new();
     let mut last_move = Instant::now();
     let mut entered_combat = None;
-    let mut num_iterations: usize = 0;
-    let sentence: Vec<char> = "Hello, world! This is a sentence to type!"
-        .chars()
-        .collect();
-
-    loop {
-        num_iterations += 1;
+    let mut sentence: Option<Vec<char>> = None;
+    let mut time_since_last_delete = Instant::now();
+    let mut deletion_state = DeletionState::FirstCharacter;
+    let mut last_attack = Instant::now();
+    while player.health > 0 {
         clear_background(WHITE);
         match game_state {
+            GameState::LoadTextures => {
+                join!(
+                    load_sentences(),
+                    load_combat_textures(),
+                    load_map_textures()
+                );
+                game_state = GameState::MainMap;
+            }
             GameState::MainMap => {
                 keyboard_actions(&mut graph);
                 mouse_events(&mut graph);
@@ -96,12 +88,31 @@ async fn main() {
             }
             GameState::EnterCombat => match enter_combat_animation((0., 0.), &mut entered_combat) {
                 State::Playing => (),
-                State::Finished => game_state = GameState::Combat,
+                State::Finished => {
+                    sentence = None;
+                    while sentence == None {
+                        let sentence_length = match (30..150)
+                            .collect::<Vec<usize>>()
+                            .choose(&mut ::rand::thread_rng())
+                        {
+                            Some(length) => *length,
+                            None => continue,
+                        };
+                        sentence = Some(return_sentence(150).unwrap().chars().collect());
+                    }
+                    last_attack = Instant::now();
+                    game_state = GameState::Combat
+                }
             },
             GameState::Combat => {
-                num_iterations += 1;
-                typing(&mut player.sentence, &num_iterations);
-                match draw_combat(&sentence, &mut player.sentence) {
+                enemy_attack(&mut player, &mut last_attack);
+                let test = sentence.clone();
+                typing(
+                    &mut player.sentence,
+                    &mut deletion_state,
+                    &mut time_since_last_delete,
+                );
+                match draw_combat(&test.unwrap(), &mut player) {
                     State::Playing => (),
                     State::Finished => {
                         game_state = GameState::ExitCombat;

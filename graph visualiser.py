@@ -1,11 +1,10 @@
 from random import randint
 from math import sqrt
 import pygame
+import math
 
-
-WIN = pygame.display.set_mode((500, 500))
+WIN = pygame.display.set_mode((1000, 1000))
 GRID_SIZE = 10
-
 
 class Node:
     def __init__(self, value: int, x: int, y: int):

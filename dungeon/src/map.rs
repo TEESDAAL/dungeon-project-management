@@ -30,6 +30,15 @@ lazy_static! {
     );
 }
 
+pub async fn load_map_textures() {
+    let _ = *PLAYER_TEXTURE;
+    println!("Map player texture loaded");
+    let _ = *ENEMY_TEXTURE;
+    println!("Map enemy texture loaded");
+    let _ = *NODE_TEXTURE;
+    println!("Map node texture loaded");
+}
+
 enum ThingToDraw {
     Node,
     Player,
@@ -201,11 +210,27 @@ impl Graph {
         unpopulated_nodes.shuffle(&mut ::rand::thread_rng());
 
         // Add the player and the goal to the map
-        let player_index = unpopulated_nodes.pop().unwrap();
-        self.current_player_position = Some(player_index);
+        for (i, index) in unpopulated_nodes.iter().enumerate() {
+            if self.nodes[*index].neighbors.len() == 1 {
+                self.goal_position = Some(*index);
+                unpopulated_nodes.remove(i);
+                break;
+            }
+        }
+        if self.goal_position == None {
+            self.goal_position = Some(unpopulated_nodes.pop().unwrap())
+        }
 
-        let goal_index = unpopulated_nodes.pop().unwrap();
-        self.goal_position = Some(goal_index);
+        for (i, index) in unpopulated_nodes.iter().enumerate() {
+            if self.nodes[*index].neighbors.len() == 1 {
+                self.current_player_position = Some(*index);
+                unpopulated_nodes.remove(i);
+                break;
+            }
+        }
+        if self.current_player_position == None {
+            self.current_player_position = Some(unpopulated_nodes.pop().unwrap())
+        }
 
         // Add the enemies to the map
         for _ in 0..*NUM_ENEMIES {
