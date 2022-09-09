@@ -53,7 +53,7 @@ fn move_player(
     }
 }
 
-#[macroquad::main("MapMaker")]
+#[macroquad::main("Dungeon Explorer")]
 async fn main() {
     let mut player = Player::new();
     let mut game_state = GameState::new();
@@ -64,6 +64,7 @@ async fn main() {
     let mut time_since_last_delete = Instant::now();
     let mut deletion_state = DeletionState::FirstCharacter;
     let mut last_attack = Instant::now();
+
     while player.health > 0 {
         clear_background(WHITE);
         match game_state {
@@ -98,7 +99,10 @@ async fn main() {
                             Some(length) => *length,
                             None => continue,
                         };
-                        sentence = Some(return_sentence(150).unwrap().chars().collect());
+                        sentence = Some(match return_sentence(sentence_length) {
+                            Some(sentence) => sentence.chars().collect(),
+                            None => continue,
+                        });
                     }
                     last_attack = Instant::now();
                     game_state = GameState::Combat

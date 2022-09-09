@@ -73,7 +73,7 @@ lazy_static! {
             39,
             Vec::from([
                 "Abolition of all rights of inheritance.".to_string(),
-                "Working Men of All Countries, Unite!ii.".to_string(),
+                "Working Men of All Countries, Unite!.".to_string(),
             ]),
         ),
         (
@@ -541,7 +541,7 @@ lazy_static! {
         (
             80,
             Vec::from([
-                "The history of all hitherto existing society† is the history of class struggles."
+                "The history of all hitherto existing society is the history of class struggles."
                     .to_string(),
                 "In its completely developed form, this family exists only among the bourgeoisie."
                     .to_string(),

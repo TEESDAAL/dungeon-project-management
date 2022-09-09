@@ -2,8 +2,6 @@ use lazy_static::lazy_static;
 use macroquad::prelude::*;
 use std::time::{Duration, Instant};
 
-const PLAYER_SIZE: f32 = 200.0;
-
 pub struct Player {
     pub _stamina: i32,
     pub health: i32,
@@ -73,37 +71,67 @@ pub fn draw_combat(sentence: &Vec<char>, player: &mut Player) -> State {
         60.,
         BLACK,
     );
-    draw_texture(
-        *BASE_TEXTURE,
-        screen_width() / 4. - BASE_TEXTURE.width() / 2.,
-        screen_height() / 4. - BASE_TEXTURE.height() / 2.,
-        WHITE,
-    );
-    draw_texture(
-        *BASE_TEXTURE,
-        screen_width() - (screen_width() / 4. - BASE_TEXTURE.width() / 2.),
-        screen_height() - (screen_height() / 4. - BASE_TEXTURE.height() / 2.),
-        WHITE,
+    // Draw Enemy and base
+    let base_size = 90. + screen_width() / 6.;
+    let base_shrink_factor = base_size / BASE_TEXTURE.width();
+    let (enemy_x_pos, enemy_y_pos) = (screen_width() / 4., screen_height() / 2.5);
+    let (base_width, base_height) = (
+        BASE_TEXTURE.width() * base_shrink_factor,
+        BASE_TEXTURE.height() * base_shrink_factor,
     );
     draw_texture_ex(
-        *ENEMY_TEXTURE,
-        screen_width() / 4. - 100. / 2.,
-        screen_height() / 4. - 100. / 1.5,
+        *BASE_TEXTURE,
+        enemy_x_pos - base_width / 2.,
+        enemy_y_pos - base_height / 2.,
         WHITE,
         DrawTextureParams {
-            dest_size: Some(Vec2::from([100., 100.])),
+            dest_size: Some(Vec2::from([base_width, base_height])),
             ..Default::default()
         },
     );
 
-    let player_shrink_factor = PLAYER_SIZE / PLAYER_TEXTURE.width();
+    let enemy_size = screen_width() / 6.;
+    let enemy_shrink_factor = enemy_size / ENEMY_TEXTURE.width();
+    let (enemy_width, enemy_height) = (
+        ENEMY_TEXTURE.width() * enemy_shrink_factor,
+        ENEMY_TEXTURE.height() * enemy_shrink_factor,
+    );
+    draw_texture_ex(
+        *ENEMY_TEXTURE,
+        enemy_x_pos - enemy_width / 2.,
+        enemy_y_pos - enemy_height / 1.2,
+        WHITE,
+        DrawTextureParams {
+            dest_size: Some(Vec2::from([enemy_width, enemy_height])),
+            flip_x: true,
+            ..Default::default()
+        },
+    );
+
+    let base_size = 100. + screen_width() / 6.;
+    let base_shrink_factor = base_size / BASE_TEXTURE.width();
+    let (player_x_pos, player_y_pos) = (screen_width() * 4. / 5., screen_height() * 3. / 4.);
+    let (base_width, base_height) = (
+        BASE_TEXTURE.width() * base_shrink_factor,
+        BASE_TEXTURE.height() * base_shrink_factor,
+    );
+    draw_texture_ex(
+        *BASE_TEXTURE,
+        player_x_pos - base_width / 2.,
+        player_y_pos - base_height / 2.,
+        WHITE,
+        DrawTextureParams {
+            dest_size: Some(Vec2::from([base_width, base_height])),
+            ..Default::default()
+        },
+    );
+
+    let player_size = screen_width() / 6.;
+    let player_shrink_factor = player_size / PLAYER_TEXTURE.width();
     draw_texture_ex(
         *PLAYER_TEXTURE,
-        screen_width() - (screen_width() / 4. - BASE_TEXTURE.width() / 2.)
-            + PLAYER_TEXTURE.width() * player_shrink_factor / 2.,
-        screen_height()
-            - (screen_height() / 4. - BASE_TEXTURE.height() / 2.)
-            - PLAYER_SIZE * player_shrink_factor / 2.,
+        player_x_pos - PLAYER_TEXTURE.width() * player_shrink_factor / 2.,
+        player_y_pos - PLAYER_TEXTURE.height() * player_shrink_factor / 1.2,
         WHITE,
         DrawTextureParams {
             dest_size: Some(Vec2::from([
@@ -233,7 +261,7 @@ pub fn typing(
                 }
             }
             DeletionState::ThirdCharacter => {
-                if time_since_last_delete.elapsed() > Duration::from_millis(200) {
+                if time_since_last_delete.elapsed() > Duration::from_millis(150) {
                     user_sentence.pop();
                     *deletion_state = DeletionState::EverythingElse;
                     *time_since_last_delete = Instant::now();
