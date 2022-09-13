@@ -305,13 +305,19 @@ impl Graph {
             }
         }
     }
-    fn draw_thing(thing_to_draw: ThingToDraw, x: f32, y: f32) {
+    fn draw_thing(&self, thing_to_draw: ThingToDraw, x: f32, y: f32) {
         let node_shrink_factor = NODE_SIZE / NODE_TEXTURE.width();
         let player_shrink_factor = PLAYER_SIZE / PLAYER_TEXTURE.width();
         let enemy_shrink_factor = ENEMY_SIZE / ENEMY_TEXTURE.width();
         let goal_shrink_factor = GOAL_SIZE / GOAL_TEXTURE.width();
         match thing_to_draw {
             ThingToDraw::Enemy => {
+                // match self.current_player_position {
+                //     Some(player_index) => {
+                //         let node = self.nodes[player_index];
+                //     }
+                //     None => (),
+                // }
                 draw_texture_ex(
                     *ENEMY_TEXTURE,
                     x - ENEMY_TEXTURE.width() * enemy_shrink_factor / 2.,
@@ -381,19 +387,19 @@ impl Graph {
             let base_x = node.x as f32 * scalar + NODE_SIZE;
             let base_y = node.y as f32 * scalar + NODE_SIZE;
 
-            Self::draw_thing(ThingToDraw::Node, base_x, base_y);
+            self.draw_thing(ThingToDraw::Node, base_x, base_y);
 
             match node.value {
                 Tile::Empty => (),
-                Tile::Enemy(_) => Self::draw_thing(ThingToDraw::Enemy, base_x, base_y),
+                Tile::Enemy(_) => self.draw_thing(ThingToDraw::Enemy, base_x, base_y),
                 Tile::Treasure(_) => (),
             }
             if self.current_player_position.unwrap() == node.index {
-                Self::draw_thing(ThingToDraw::Player, base_x, base_y);
+                self.draw_thing(ThingToDraw::Player, base_x, base_y);
             }
 
             if self.goal_position.unwrap() == node.index {
-                Self::draw_thing(ThingToDraw::Goal, base_x, base_y);
+                self.draw_thing(ThingToDraw::Goal, base_x, base_y);
             }
         }
     }
