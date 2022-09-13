@@ -241,7 +241,10 @@ pub fn typing(
     time_since_last_delete: &mut Instant,
 ) {
     if let Some(c) = get_char_pressed() {
-        user_sentence.push(c);
+        println!("{:?}", user_sentence);
+        if c != '\u{8}' {
+            user_sentence.push(c);
+        }
     }
     if is_key_released(KeyCode::Backspace) {
         *deletion_state = DeletionState::FirstCharacter;
