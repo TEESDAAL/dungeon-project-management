@@ -9,6 +9,7 @@ lazy_static! {
     pub static ref CARDS: [Card; 3] = [
         Card {
             title: "Stronger Armor".to_string(),
+            card_type: CardType::TempDamageReduction,
             card_width: 300.,
             card_height: 300. * 1.618034,
             image: *CARD_TEXTURE,
@@ -17,6 +18,7 @@ lazy_static! {
         },
         Card {
             title: "Crab Food".to_string(),
+            card_type: CardType::TempHeal,
             card_width: 300.,
             card_height: 300. * 1.618034,
             image: *CARD_TEXTURE,
@@ -24,10 +26,37 @@ lazy_static! {
         },
         Card {
             title: "Supplements".to_string(),
+            card_type: CardType::TempDamageReduction,
             card_width: 300.,
             card_height: 300. * 1.618034,
             image: *CARD_TEXTURE,
             description: "You need to type 10 fewer characters in the next brawl".to_string(),
+        },
+    ];
+    pub static ref PERMANENT_CARDS: [Card; 3] = [
+        Card {
+            title: "Strengthened Exoskeleton".to_string(),
+            card_type: CardType::TempDamageReduction,
+            card_width: 300.,
+            card_height: 300. * 1.618034,
+            image: *CARD_TEXTURE,
+            description: "You take less damage from enemy attacks".to_string(),
+        },
+        Card {
+            title: "Bulked Up".to_string(),
+            card_type: CardType::TempHeal,
+            card_width: 300.,
+            card_height: 300. * 1.618034,
+            image: *CARD_TEXTURE,
+            description: "Increases your max health.".to_string(),
+        },
+        Card {
+            title: "Sharpened Pincers".to_string(),
+            card_type: CardType::TempDamageReduction,
+            card_width: 300.,
+            card_height: 300. * 1.618034,
+            image: *CARD_TEXTURE,
+            description: "You need fewer characters to defeat any enemy".to_string(),
         },
     ];
 }
@@ -35,10 +64,18 @@ lazy_static! {
 #[derive(Clone)]
 pub struct Card {
     pub title: String,
+    pub card_type: CardType,
     pub image: Texture2D,
     pub description: String,
     pub card_width: f32,
     pub card_height: f32,
+}
+
+#[derive(Clone)]
+pub enum CardType {
+    TempHeal,
+    TempWordsReduce,
+    TempDamageReduction,
 }
 
 impl Card {

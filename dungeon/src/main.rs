@@ -10,13 +10,18 @@ use futures::join;
 use macroquad::prelude::*;
 use std::time::{Duration, Instant};
 pub mod treasure;
+
+enum RewardType {
+    Treasure,
+    EndOfLevel,
+}
 enum GameState {
     LoadTextures,
     MainMap,
     EnterCombat,
     Combat,
     ExitCombat,
-    Rewarded,
+    Rewarded(RewardType),
 }
 
 impl GameState {
@@ -40,6 +45,9 @@ fn move_player(
         let travel_time = Duration::from_millis((distance / movement_speed).round() as u64);
         if last_move.elapsed() >= travel_time {
             let next_pos = graph.player_path.pop().unwrap();
+            if next_pos == graph.goal_position.unwrap() {
+                *game_state = GameState::Rewarded(RewardType::EndOfLevel)
+            }
             graph.move_player(next_pos);
             *last_move = Instant::now();
 
@@ -49,7 +57,7 @@ fn move_player(
                     *game_state = GameState::EnterCombat;
                     entered_combat.replace(Instant::now());
                 }
-                Tile::Treasure(_) => *game_state = GameState::Rewarded,
+                Tile::Treasure(_) => *game_state = GameState::Rewarded(RewardType::Treasure),
             }
         }
     }
@@ -74,7 +82,12 @@ async fn main() {
     let mut time_since_last_delete = Instant::now();
     let mut deletion_state = DeletionState::FirstCharacter;
     let mut last_attack = Instant::now();
-    while player.health > 0 {
+    let mut temp_damage_reduction = 0.0;
+    let mut perm_damage_reduction = 0.0;
+
+    let mut temp_words_reduction = 0;
+    let mut perm_word_reduction = 0;
+    while player.health > 0.0 {
         clear_background(WHITE);
         match game_state {
             GameState::LoadTextures => {
@@ -100,8 +113,9 @@ async fn main() {
                 State::Playing => (),
                 State::Finished => {
                     sentence = None;
+                    let word_reduction = temp_words_reduction + perm_word_reduction;
                     while sentence == None {
-                        let sentence_length = match (30..150)
+                        let sentence_length = match ((40 - word_reduction)..(60 - word_reduction))
                             .collect::<Vec<usize>>()
                             .choose(&mut ::rand::thread_rng())
                         {
@@ -118,7 +132,8 @@ async fn main() {
                 }
             },
             GameState::Combat => {
-                enemy_attack(&mut player, &mut last_attack);
+                let damage_reduction = perm_damage_reduction + temp_damage_reduction;
+                enemy_attack(&mut player, &mut last_attack, damage_reduction);
                 let test = sentence.clone();
                 typing(
                     &mut player.sentence,
@@ -133,15 +148,18 @@ async fn main() {
                     }
                 }
             }
-            GameState::ExitCombat => match enter_combat_animation((0., 0.), &mut entered_combat) {
-                State::Playing => (),
-                State::Finished => {
-                    graph.nodes[graph.current_player_position.unwrap()].value = Tile::Empty;
-                    game_state = GameState::MainMap;
-                    last_move = Instant::now();
+            GameState::ExitCombat => {
+                temp_damage_reduction = 0.0;
+                match enter_combat_animation((0., 0.), &mut entered_combat) {
+                    State::Playing => (),
+                    State::Finished => {
+                        graph.nodes[graph.current_player_position.unwrap()].value = Tile::Empty;
+                        game_state = GameState::MainMap;
+                        last_move = Instant::now();
+                    }
                 }
-            },
-            GameState::Rewarded => {
+            }
+            GameState::Rewarded(_) => {
                 graph.draw_graph();
                 let cards_and_coords = vec![
                     (
@@ -174,7 +192,19 @@ async fn main() {
                 }
 
                 match card_select(&cards_and_coords) {
-                    Some(card) => println!("{}", card.title),
+                    Some(card) => {
+                        match card.card_type {
+                            CardType::TempHeal => {
+                                player.health += 40.;
+                                if player.health > 100.0 {
+                                    player.health = 100.0;
+                                }
+                            }
+                            CardType::TempDamageReduction => temp_damage_reduction += 1.,
+                            CardType::TempWordsReduce => temp_words_reduction += 10,
+                        };
+                        game_state = GameState::MainMap;
+                    }
                     None => (),
                 }
             }
