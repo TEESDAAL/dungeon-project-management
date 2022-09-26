@@ -4,7 +4,7 @@ use std::time::{Duration, Instant};
 
 pub struct Player {
     pub _stamina: i32,
-    pub health: i32,
+    pub health: f32,
     pub _defense: i32,
     pub sentence: Vec<char>,
 }
@@ -13,7 +13,7 @@ impl Player {
     pub fn new() -> Player {
         Player {
             _stamina: 50,
-            health: 100,
+            health: 100.0,
             _defense: 100,
             sentence: vec![],
         }
@@ -223,14 +223,10 @@ fn draw_sentence(sentence: &Vec<char>, user_sentence: &Vec<char>) {
     }
 }
 
-pub fn enemy_attack(player: &mut Player, last_attack: &mut Instant) {
+pub fn enemy_attack(player: &mut Player, last_attack: &mut Instant, damage_reduction: f32) {
     let enemy_attack_time = Duration::from_millis(2000);
-    if last_attack.elapsed() < Duration::from_millis(200) {
-        // *enemy_size /= 1.1;
-    }
     if last_attack.elapsed() >= enemy_attack_time {
-        // *enemy_size *= 1.1;
-        player.health -= 3;
+        player.health -= 3. - damage_reduction;
         *last_attack = Instant::now();
     }
 }
