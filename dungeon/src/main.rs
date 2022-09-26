@@ -4,17 +4,19 @@ pub mod combat;
 use crate::combat::*;
 pub mod sentences;
 use crate::sentences::*;
+use crate::treasure::*;
 use ::rand::seq::SliceRandom;
 use futures::join;
 use macroquad::prelude::*;
 use std::time::{Duration, Instant};
-
+pub mod treasure;
 enum GameState {
     LoadTextures,
     MainMap,
     EnterCombat,
     Combat,
     ExitCombat,
+    Rewarded,
 }
 
 impl GameState {
@@ -53,7 +55,15 @@ fn move_player(
     }
 }
 
-#[macroquad::main("Dungeon Explorer")]
+fn window_conf() -> Conf {
+    Conf {
+        window_title: "Dungeon Explorer".to_owned(),
+        fullscreen: true,
+        ..Default::default()
+    }
+}
+
+#[macroquad::main(window_conf)]
 async fn main() {
     let mut player = Player::new();
     let mut game_state = GameState::new();
@@ -64,7 +74,13 @@ async fn main() {
     let mut time_since_last_delete = Instant::now();
     let mut deletion_state = DeletionState::FirstCharacter;
     let mut last_attack = Instant::now();
-
+    let card = Card {
+        title: "Stronger Armor".to_string(),
+        card_width: 300.,
+        card_height: 300. * 1.618034,
+        image: *TREASURE_TEXTURE,
+        description: "Take 1 less damage from each enemy attack for the next brawl.".to_string(),
+    };
     while player.health > 0 {
         clear_background(WHITE);
         match game_state {
@@ -132,6 +148,18 @@ async fn main() {
                     last_move = Instant::now();
                 }
             },
+            GameState::Rewarded => {
+                graph.draw_graph();
+                card.draw_card(
+                    screen_width() / 2. - card.card_width * 1.2,
+                    screen_height() / 2.,
+                );
+                card.draw_card(screen_width() / 2., screen_height() / 2.);
+                card.draw_card(
+                    screen_width() / 2. + card.card_width * 1.2,
+                    screen_height() / 2.,
+                );
+            }
         }
         next_frame().await
     }

@@ -1,7 +1,11 @@
 use ::rand::{seq::SliceRandom, Rng};
 use lazy_static::lazy_static;
 use macroquad::prelude::*;
-use std::collections::{HashSet, VecDeque};
+
+use std::{
+    cmp::max,
+    collections::{HashSet, VecDeque},
+};
 
 pub const GRID_SIZE: usize = 6;
 const NODE_SIZE: f32 = 100.;
@@ -9,9 +13,11 @@ const EDGE_SIZE: f32 = 10.;
 const PLAYER_SIZE: f32 = NODE_SIZE / 1.5;
 const ENEMY_SIZE: f32 = NODE_SIZE / 1.5;
 const GOAL_SIZE: f32 = NODE_SIZE / 1.5;
+const TREASURE_SIZE: f32 = NODE_SIZE / 1.5;
 lazy_static! {
     pub static ref NUM_NODES: usize = (GRID_SIZE as f32).powf(1.5).round() as usize;
-    pub static ref NUM_ENEMIES: usize = *NUM_NODES / 2;
+    pub static ref NUM_TREASURE: usize = max(1, (*NUM_NODES as f32 / 10.).round() as usize);
+    pub static ref NUM_ENEMIES: usize = *NUM_NODES / 5;
     pub static ref NODE_TEXTURE: Texture2D = Texture2D::from_file_with_format(
         include_bytes!("../assets/node.png"),
         Some(ImageFormat::Png),
@@ -28,6 +34,14 @@ lazy_static! {
         include_bytes!("../assets/logo.png"),
         Some(ImageFormat::Png),
     );
+    pub static ref FOREST_BACKGROUND_TEXTURE: Texture2D = Texture2D::from_file_with_format(
+        include_bytes!("../assets/forest.png"),
+        Some(ImageFormat::Png),
+    );
+    pub static ref TREASURE_TEXTURE: Texture2D = Texture2D::from_file_with_format(
+        include_bytes!("../assets/treasure.png"),
+        Some(ImageFormat::Png),
+    );
 }
 
 pub async fn load_map_textures() {
@@ -37,6 +51,10 @@ pub async fn load_map_textures() {
     println!("Map enemy texture loaded");
     let _ = *NODE_TEXTURE;
     println!("Map node texture loaded");
+    let _ = *TREASURE_TEXTURE;
+    println!("Map treasure texture loaded");
+    let _ = *FOREST_BACKGROUND_TEXTURE;
+    println!("Background texture 1 loaded");
 }
 
 enum ThingToDraw {
@@ -44,6 +62,7 @@ enum ThingToDraw {
     Player,
     Enemy,
     Goal,
+    Treasure,
 }
 
 #[derive(Eq, PartialEq, Hash, Clone, Debug, Default)]
@@ -70,6 +89,7 @@ pub struct Node {
 }
 
 pub struct Graph {
+    pub level: usize,
     pub nodes: Vec<Node>,
     pub current_player_position: Option<usize>,
     pub goal_position: Option<usize>,
@@ -80,6 +100,7 @@ impl Graph {
     pub fn new() -> Graph {
         // Create a default graph then add the nodes, connect them and specialise them
         let mut graph = Graph {
+            level: 0,
             nodes: Vec::new(),
             current_player_position: None,
             goal_position: None,
@@ -205,22 +226,7 @@ impl Graph {
         }
     }
 
-    fn populate_board(&mut self) {
-        let mut unpopulated_nodes: Vec<usize> = (0..self.nodes.len()).collect();
-        unpopulated_nodes.shuffle(&mut ::rand::thread_rng());
-
-        // Add the player and the goal to the map
-        for (i, index) in unpopulated_nodes.iter().enumerate() {
-            if self.nodes[*index].neighbors.len() == 1 {
-                self.goal_position = Some(*index);
-                unpopulated_nodes.remove(i);
-                break;
-            }
-        }
-        if self.goal_position == None {
-            self.goal_position = Some(unpopulated_nodes.pop().unwrap())
-        }
-
+    fn add_player(&mut self, unpopulated_nodes: &mut Vec<usize>) {
         for (i, index) in unpopulated_nodes.iter().enumerate() {
             if self.nodes[*index].neighbors.len() == 1 {
                 self.current_player_position = Some(*index);
@@ -231,14 +237,66 @@ impl Graph {
         if self.current_player_position == None {
             self.current_player_position = Some(unpopulated_nodes.pop().unwrap())
         }
+    }
+    fn add_goal(&mut self, unpopulated_nodes: &mut Vec<usize>) {
+        for (i, index) in unpopulated_nodes.iter().enumerate() {
+            if self.nodes[*index].neighbors.len() == 1 {
+                self.goal_position = Some(*index);
+                unpopulated_nodes.remove(i);
+                break;
+            }
+        }
+        if self.goal_position == None {
+            self.goal_position = Some(unpopulated_nodes.pop().unwrap())
+        }
+    }
+    fn add_enemies(&mut self, unpopulated_nodes: &mut Vec<usize>) {
+        let mut num_enemies = *NUM_ENEMIES;
+        if num_enemies > 0 {
+            let mut path = self.get_path(
+                self.current_player_position.unwrap(),
+                self.goal_position.unwrap(),
+            );
+            path.shuffle(&mut ::rand::thread_rng());
+            for index in path.iter() {
+                if unpopulated_nodes.contains(&index) {
+                    num_enemies -= 1;
+                    self.nodes[*index].value = Tile::Enemy(Enemy {});
+                    break;
+                }
+            }
+        }
 
-        // Add the enemies to the map
-        for _ in 0..*NUM_ENEMIES {
+        for _ in 0..num_enemies {
             self.nodes[unpopulated_nodes
                 .pop()
                 .expect("Ran out of nodes in enemies")]
             .value = Tile::Enemy(Enemy {});
         }
+    }
+    fn add_treasure(&mut self, unpopulated_nodes: &mut Vec<usize>) {
+        let mut num_treasure = *NUM_TREASURE;
+        for index in unpopulated_nodes.iter() {
+            if self.nodes[*index].neighbors.len() == 1 {
+                self.nodes[*index].value = Tile::Treasure(Treasure {});
+                num_treasure -= 1;
+                if num_treasure == 0 {
+                    return;
+                }
+            }
+        }
+        for _ in 0..num_treasure {
+            self.nodes[unpopulated_nodes.pop().unwrap()].value = Tile::Treasure(Treasure {});
+        }
+    }
+    fn populate_board(&mut self) {
+        let mut unpopulated_nodes: Vec<usize> = (0..self.nodes.len()).collect();
+        unpopulated_nodes.shuffle(&mut ::rand::thread_rng());
+
+        self.add_goal(&mut unpopulated_nodes);
+        self.add_player(&mut unpopulated_nodes);
+        self.add_treasure(&mut unpopulated_nodes);
+        self.add_enemies(&mut unpopulated_nodes);
     }
 
     pub fn get_path(&self, start_node: usize, end_node: usize) -> Vec<usize> {
@@ -291,14 +349,15 @@ impl Graph {
         *self = Graph::new();
     }
     fn draw_edges(&self) {
-        let scalar = screen_height() / GRID_SIZE as f32;
+        let y_scalar = screen_height() / GRID_SIZE as f32;
+        let x_scalar = screen_width() / GRID_SIZE as f32;
         for node in self.nodes.iter() {
             for neighbor in node.neighbors.iter() {
                 draw_line(
-                    node.x as f32 * scalar + NODE_SIZE,
-                    node.y as f32 * scalar + NODE_SIZE,
-                    self.nodes[*neighbor].x as f32 * scalar + NODE_SIZE,
-                    self.nodes[*neighbor].y as f32 * scalar + NODE_SIZE,
+                    node.x as f32 * x_scalar + NODE_SIZE / 2.0,
+                    node.y as f32 * y_scalar + NODE_SIZE / 2.0,
+                    self.nodes[*neighbor].x as f32 * x_scalar + NODE_SIZE / 2.0,
+                    self.nodes[*neighbor].y as f32 * y_scalar + NODE_SIZE / 2.0,
                     EDGE_SIZE,
                     Color::from_rgba(0, 0, 0, 130),
                 );
@@ -306,18 +365,9 @@ impl Graph {
         }
     }
     fn draw_thing(&self, thing_to_draw: ThingToDraw, x: f32, y: f32) {
-        let node_shrink_factor = NODE_SIZE / NODE_TEXTURE.width();
-        let player_shrink_factor = PLAYER_SIZE / PLAYER_TEXTURE.width();
-        let enemy_shrink_factor = ENEMY_SIZE / ENEMY_TEXTURE.width();
-        let goal_shrink_factor = GOAL_SIZE / GOAL_TEXTURE.width();
         match thing_to_draw {
             ThingToDraw::Enemy => {
-                // match self.current_player_position {
-                //     Some(player_index) => {
-                //         let node = self.nodes[player_index];
-                //     }
-                //     None => (),
-                // }
+                let enemy_shrink_factor = ENEMY_SIZE / ENEMY_TEXTURE.width();
                 draw_texture_ex(
                     *ENEMY_TEXTURE,
                     x - ENEMY_TEXTURE.width() * enemy_shrink_factor / 2.,
@@ -333,6 +383,8 @@ impl Graph {
                 );
             }
             ThingToDraw::Player => {
+                let player_shrink_factor = PLAYER_SIZE / PLAYER_TEXTURE.width();
+
                 draw_texture_ex(
                     *PLAYER_TEXTURE,
                     x - PLAYER_TEXTURE.width() * player_shrink_factor / 2.,
@@ -348,6 +400,8 @@ impl Graph {
                 );
             }
             ThingToDraw::Goal => {
+                let goal_shrink_factor = GOAL_SIZE / GOAL_TEXTURE.width();
+
                 draw_texture_ex(
                     *GOAL_TEXTURE,
                     x - GOAL_TEXTURE.width() * goal_shrink_factor / 2.,
@@ -363,6 +417,7 @@ impl Graph {
                 );
             }
             ThingToDraw::Node => {
+                let node_shrink_factor = NODE_SIZE / NODE_TEXTURE.width();
                 draw_texture_ex(
                     *NODE_TEXTURE,
                     x - NODE_TEXTURE.width() * node_shrink_factor / 2.,
@@ -377,23 +432,60 @@ impl Graph {
                     },
                 );
             }
+            ThingToDraw::Treasure => {
+                let treasure_shrink_factor = TREASURE_SIZE / TREASURE_TEXTURE.width();
+                draw_texture_ex(
+                    *TREASURE_TEXTURE,
+                    x - TREASURE_TEXTURE.width() * treasure_shrink_factor / 2.,
+                    y - TREASURE_TEXTURE.height() * treasure_shrink_factor / 2.,
+                    WHITE,
+                    DrawTextureParams {
+                        dest_size: Some(Vec2::from([
+                            TREASURE_TEXTURE.width() * treasure_shrink_factor,
+                            TREASURE_TEXTURE.height() * treasure_shrink_factor,
+                        ])),
+                        ..Default::default()
+                    },
+                );
+            }
         }
     }
 
+    pub fn draw_terrain(&self) {
+        let texture = *FOREST_BACKGROUND_TEXTURE;
+        let scalar = screen_width() / texture.width();
+        draw_texture_ex(
+            texture,
+            screen_width() / 2. - texture.width() * scalar / 2.,
+            screen_height() - texture.height() * scalar,
+            WHITE,
+            DrawTextureParams {
+                dest_size: Some(Vec2::from([
+                    texture.width() * scalar,
+                    texture.height() * scalar,
+                ])),
+                ..Default::default()
+            },
+        );
+    }
+
     pub fn draw_graph(&self) {
-        let scalar = screen_height() / GRID_SIZE as f32;
+        let y_scalar = screen_height() / GRID_SIZE as f32;
+        let x_scalar = screen_width() / GRID_SIZE as f32;
+        self.draw_terrain();
         self.draw_edges();
         for node in &self.nodes {
-            let base_x = node.x as f32 * scalar + NODE_SIZE;
-            let base_y = node.y as f32 * scalar + NODE_SIZE;
+            let base_x = node.x as f32 * x_scalar + NODE_SIZE / 2.0;
+            let base_y = node.y as f32 * y_scalar + NODE_SIZE / 2.0;
 
             self.draw_thing(ThingToDraw::Node, base_x, base_y);
 
             match node.value {
                 Tile::Empty => (),
                 Tile::Enemy(_) => self.draw_thing(ThingToDraw::Enemy, base_x, base_y),
-                Tile::Treasure(_) => (),
+                Tile::Treasure(_) => self.draw_thing(ThingToDraw::Treasure, base_x, base_y),
             }
+
             if self.current_player_position.unwrap() == node.index {
                 self.draw_thing(ThingToDraw::Player, base_x, base_y);
             }
@@ -413,11 +505,16 @@ pub fn keyboard_actions(graph: &mut Graph) {
 
 pub fn mouse_events(graph: &mut Graph) {
     if is_mouse_button_pressed(MouseButton::Left) {
+        let shrink_factor = NODE_SIZE / NODE_TEXTURE.width();
+
         let (mouse_x, mouse_y) = mouse_position();
-        let multiplier = screen_height() / GRID_SIZE as f32;
+        let y_scalar = screen_height() / GRID_SIZE as f32;
+        let x_scalar = screen_width() / GRID_SIZE as f32;
         let (x, y) = (
-            ((mouse_x - NODE_SIZE) / multiplier).round() as isize,
-            ((mouse_y - NODE_SIZE) / multiplier).round() as isize,
+            ((mouse_x - NODE_SIZE / 2.0 + NODE_TEXTURE.width() * shrink_factor / 2.) / x_scalar)
+                .round() as isize,
+            ((mouse_y - NODE_SIZE / 2.0 + NODE_TEXTURE.height() * shrink_factor / 2.) / y_scalar)
+                .round() as isize,
         );
         if let Some(end_node) = graph.get_node(x, y) {
             graph.player_path =
