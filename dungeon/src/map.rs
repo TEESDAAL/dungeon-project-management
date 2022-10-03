@@ -1,7 +1,6 @@
 use ::rand::{seq::SliceRandom, Rng};
 use lazy_static::lazy_static;
 use macroquad::prelude::*;
-
 use std::{
     cmp::max,
     collections::{HashSet, VecDeque},
@@ -42,11 +41,17 @@ lazy_static! {
         include_bytes!("../assets/treasure.png"),
         Some(ImageFormat::Png),
     );
+    pub static ref PLAYER_ARMOURED_TEXTURE: Texture2D = Texture2D::from_file_with_format(
+        include_bytes!("../assets/armored_ferris.png"),
+        Some(ImageFormat::Png)
+    );
 }
 
 pub async fn load_map_textures() {
     let _ = *PLAYER_TEXTURE;
     println!("Map player texture loaded");
+    let _ = *PLAYER_ARMOURED_TEXTURE;
+    println!("Map armoured player texture loaded");
     let _ = *ENEMY_TEXTURE;
     println!("Map enemy texture loaded");
     let _ = *NODE_TEXTURE;
@@ -60,6 +65,7 @@ pub async fn load_map_textures() {
 enum ThingToDraw {
     Node,
     Player,
+    PlayerArmoured,
     Enemy,
     Goal,
     Treasure,
@@ -399,6 +405,23 @@ impl Graph {
                     },
                 );
             }
+            ThingToDraw::PlayerArmoured => {
+                let player_shrink_factor = PLAYER_SIZE / PLAYER_ARMOURED_TEXTURE.width();
+
+                draw_texture_ex(
+                    *PLAYER_ARMOURED_TEXTURE,
+                    x - PLAYER_ARMOURED_TEXTURE.width() * player_shrink_factor / 2.,
+                    y - PLAYER_ARMOURED_TEXTURE.height() * player_shrink_factor / 2.,
+                    WHITE,
+                    DrawTextureParams {
+                        dest_size: Some(Vec2::from([
+                            PLAYER_ARMOURED_TEXTURE.width() * player_shrink_factor,
+                            PLAYER_ARMOURED_TEXTURE.height() * player_shrink_factor,
+                        ])),
+                        ..Default::default()
+                    },
+                );
+            }
             ThingToDraw::Goal => {
                 let goal_shrink_factor = GOAL_SIZE / GOAL_TEXTURE.width();
 
@@ -469,7 +492,7 @@ impl Graph {
         );
     }
 
-    pub fn draw_graph(&self) {
+    pub fn draw_graph(&self, armoured: &bool) {
         let y_scalar = screen_height() / GRID_SIZE as f32;
         let x_scalar = screen_width() / GRID_SIZE as f32;
         self.draw_terrain();
@@ -487,7 +510,11 @@ impl Graph {
             }
 
             if self.current_player_position.unwrap() == node.index {
-                self.draw_thing(ThingToDraw::Player, base_x, base_y);
+                if *armoured {
+                    self.draw_thing(ThingToDraw::PlayerArmoured, base_x, base_y);
+                } else {
+                    self.draw_thing(ThingToDraw::Player, base_x, base_y);
+                }
             }
 
             if self.goal_position.unwrap() == node.index {

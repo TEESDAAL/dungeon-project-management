@@ -107,7 +107,7 @@ async fn main() {
                     &mut game_state,
                     &mut entered_combat,
                 );
-                graph.draw_graph();
+                graph.draw_graph(&player.armoured);
             }
             GameState::EnterCombat => match enter_combat_animation((0., 0.), &mut entered_combat) {
                 State::Playing => (),
@@ -151,6 +151,7 @@ async fn main() {
             }
             GameState::ExitCombat => {
                 temp_damage_reduction = 0.0;
+                player.armoured = false;
                 match enter_combat_animation((0., 0.), &mut entered_combat) {
                     State::Playing => (),
                     State::Finished => {
@@ -161,7 +162,7 @@ async fn main() {
                 }
             }
             GameState::Rewarded(_) => {
-                graph.draw_graph();
+                graph.draw_graph(&player.armoured);
                 let cards_and_coords = vec![
                     (
                         CARDS[0].clone(),
@@ -201,7 +202,10 @@ async fn main() {
                                     player.health = 100.0;
                                 }
                             }
-                            CardType::TempDamageReduction => temp_damage_reduction += 1.,
+                            CardType::TempDamageReduction => {
+                                player.armoured = true;
+                                temp_damage_reduction += 1.
+                            }
                             CardType::TempWordsReduce => temp_words_reduction += 10,
                         };
                         game_state = GameState::MainMap;

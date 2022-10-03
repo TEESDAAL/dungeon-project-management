@@ -10,6 +10,7 @@ pub struct Player {
     pub health: f32,
     pub _defense: i32,
     pub sentence: Vec<char>,
+    pub armoured: bool,
 }
 
 impl Player {
@@ -19,6 +20,7 @@ impl Player {
             health: 100.0,
             _defense: 100,
             sentence: vec![],
+            armoured: false,
         }
     }
 }
@@ -26,6 +28,10 @@ impl Player {
 lazy_static! {
     pub static ref PLAYER_TEXTURE: Texture2D = Texture2D::from_file_with_format(
         include_bytes!("../assets/ferris-back.png"),
+        Some(ImageFormat::Png),
+    );
+    pub static ref ARMOURED_PLAYER_TEXTURE: Texture2D = Texture2D::from_file_with_format(
+        include_bytes!("../assets/armored_ferris-back.png"),
         Some(ImageFormat::Png),
     );
     pub static ref ENEMY_TEXTURE: Texture2D = Texture2D::from_file_with_format(
@@ -51,6 +57,8 @@ pub enum State {
 pub async fn load_combat_textures() {
     let _ = *PLAYER_TEXTURE;
     println!("Player texture loaded");
+    let _ = *ARMOURED_PLAYER_TEXTURE;
+    println!("Armoured player texture loaded");
     let _ = *ENEMY_TEXTURE;
     println!("Enemy texture loaded");
     let _ = *BASE_TEXTURE;
@@ -128,18 +136,22 @@ pub fn draw_combat(sentence: &Vec<char>, player: &mut Player) -> State {
             ..Default::default()
         },
     );
-
+    let texture = if player.armoured {
+        *ARMOURED_PLAYER_TEXTURE
+    } else {
+        *PLAYER_TEXTURE
+    };
     let player_size = screen_width() / 6.;
-    let player_shrink_factor = player_size / PLAYER_TEXTURE.width();
+    let player_shrink_factor = player_size / texture.width();
     draw_texture_ex(
-        *PLAYER_TEXTURE,
-        player_x_pos - PLAYER_TEXTURE.width() * player_shrink_factor / 2.,
-        player_y_pos - PLAYER_TEXTURE.height() * player_shrink_factor / 1.2,
+        texture,
+        player_x_pos - texture.width() * player_shrink_factor / 2.,
+        player_y_pos - texture.height() * player_shrink_factor / 1.2,
         WHITE,
         DrawTextureParams {
             dest_size: Some(Vec2::from([
-                PLAYER_TEXTURE.width() * player_shrink_factor,
-                PLAYER_TEXTURE.height() * player_shrink_factor,
+                texture.width() * player_shrink_factor,
+                texture.height() * player_shrink_factor,
             ])),
             ..Default::default()
         },
