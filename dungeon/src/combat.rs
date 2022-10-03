@@ -2,7 +2,7 @@ use lazy_static::lazy_static;
 use macroquad::prelude::*;
 use std::time::{Duration, Instant};
 
-pub const SENTENCE_UPPER_BOUND: usize = 100;
+pub const SENTENCE_UPPER_BOUND: usize = 110;
 pub const SENTENCE_LOWER_BOUND: usize = 90;
 
 pub struct Player {
