@@ -115,7 +115,8 @@ async fn main() {
                     sentence = None;
                     let word_reduction = temp_words_reduction + perm_word_reduction;
                     while sentence == None {
-                        let sentence_length = match ((40 - word_reduction)..(60 - word_reduction))
+                        let sentence_length = match ((SENTENCE_LOWER_BOUND - word_reduction)
+                            ..(SENTENCE_UPPER_BOUND - word_reduction))
                             .collect::<Vec<usize>>()
                             .choose(&mut ::rand::thread_rng())
                         {

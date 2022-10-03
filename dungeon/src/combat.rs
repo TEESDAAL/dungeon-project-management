@@ -2,6 +2,9 @@ use lazy_static::lazy_static;
 use macroquad::prelude::*;
 use std::time::{Duration, Instant};
 
+pub const SENTENCE_UPPER_BOUND: usize = 100;
+pub const SENTENCE_LOWER_BOUND: usize = 90;
+
 pub struct Player {
     pub _stamina: i32,
     pub health: f32,
@@ -151,6 +154,29 @@ pub fn draw_combat(sentence: &Vec<char>, player: &mut Player) -> State {
     }
 }
 
+pub fn return_lines(sentence: &Vec<char>, width: f32, font_size: u16) -> Vec<String> {
+    let string_sentence = sentence.iter().collect::<String>();
+    let words: Vec<&str> = string_sentence.split(' ').collect();
+    let mut line: Vec<&str> = Vec::new();
+    let mut temp_line = line.clone();
+    let mut lines: Vec<Vec<&str>> = Vec::new();
+    for word in words {
+        temp_line.push(word);
+        if measure_text(&temp_line.join(" ")[..], None, font_size, 1.).width > width {
+            lines.push(line);
+            line = vec![word];
+            temp_line = line.clone();
+        } else {
+            line.push(word);
+        }
+    }
+    if line.concat() != "" {
+        lines.push(line);
+    }
+
+    lines.iter().map(|line| line.join(" ")).collect()
+}
+
 fn draw_sentence(sentence: &Vec<char>, user_sentence: &Vec<char>) {
     let mut char_pairs: Vec<(Option<&char>, Option<&char>)> = Vec::new();
     let mut i = 0;
@@ -162,63 +188,62 @@ fn draw_sentence(sentence: &Vec<char>, user_sentence: &Vec<char>) {
         }
         i += 1;
     }
+    let font_size = 50.;
 
     let x_upper_bound = screen_width() - 20.;
-    let spacing = 25;
-    let font_size = 50.;
-    let mut shift = 0.;
-    let mut y_pos = 50. - font_size / 2.;
-    for (i, char_pair) in char_pairs.into_iter().enumerate() {
-        let mut x_pos = (spacing * i) as f32 - shift;
-        if x_pos >= x_upper_bound {
-            shift += x_upper_bound;
-            x_pos = 50. - font_size / 2. - shift;
-            if x_pos < 0. {
-                x_pos = 0.;
-            }
-            y_pos += font_size;
-        }
-        x_pos += 10.;
-        match char_pair {
+    let mut line_lengths: Vec<usize> = return_lines(&sentence, x_upper_bound, font_size as u16)
+        .iter()
+        .map(|line| line.len())
+        .collect();
+
+    let last_index = line_lengths.len() - 1;
+    line_lengths[last_index] = 82;
+
+    let spacing = 22;
+    let mut y_pos = font_size as f32 / 2. + 10.;
+    let mut num_lines = 0;
+
+    let mut num_chars = 0;
+    for char_pair in char_pairs.iter() {
+        let x_pos = 10. + (spacing * num_chars) as f32;
+        let line_length = match line_lengths.get(num_lines) {
+            Some(length) => *length,
+            None => 82,
+        };
+
+        let (c, color) = match *char_pair {
             (Some(c), Some(s)) => {
+                let character = if *c == ' ' { '⊔' } else { *c };
                 if c == s {
-                    draw_text(&c.to_string(), x_pos, y_pos, font_size, GREEN);
-                    if c == &' ' {
-                        draw_rectangle(
-                            x_pos,
-                            y_pos - font_size / 2.,
-                            spacing as f32 - 5.,
-                            font_size / 2.,
-                            Color::from_rgba(0, 200, 0, 100),
-                        );
-                    }
+                    (character, Color::from_rgba(0, 200, 0, 100))
                 } else {
-                    draw_text(&c.to_string(), x_pos, y_pos, font_size, RED);
-                    if c == &' ' {
-                        draw_rectangle(
-                            x_pos,
-                            y_pos - font_size / 2.,
-                            spacing as f32 - 5.,
-                            font_size / 2.,
-                            Color::from_rgba(200, 0, 0, 100),
-                        );
-                    }
+                    (character, Color::from_rgba(200, 0, 0, 100))
                 }
             }
             (Some(c), None) => {
-                draw_text(&c.to_string(), x_pos, y_pos, font_size, RED);
-                if c == &' ' {
-                    draw_rectangle(
-                        x_pos,
-                        y_pos - font_size / 2.,
-                        spacing as f32 - 5.,
-                        font_size / 2.,
-                        Color::from_rgba(200, 0, 0, 100),
-                    );
-                }
+                let character = if *c == ' ' { '⊔' } else { *c };
+                (character, Color::from_rgba(200, 0, 0, 100))
             }
-            (None, Some(s)) => draw_text(&s.to_string(), x_pos, y_pos, font_size, GRAY),
+            (None, Some(s)) => (*s, GRAY),
             (None, None) => break,
+        };
+        draw_text_ex(
+            &c.to_string()[..],
+            x_pos,
+            y_pos,
+            TextParams {
+                font_size: font_size as u16,
+                font_scale: 1.,
+                color,
+                ..Default::default()
+            },
+        );
+        num_chars += 1;
+
+        if num_chars > line_length {
+            num_chars = 0;
+            num_lines += 1;
+            y_pos += font_size;
         }
     }
 }
