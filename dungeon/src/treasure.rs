@@ -2,8 +2,16 @@ use lazy_static::lazy_static;
 use macroquad::prelude::*;
 
 lazy_static! {
-    pub static ref CARD_TEXTURE: Texture2D = Texture2D::from_file_with_format(
-        include_bytes!("../assets/node.png"),
+    pub static ref ARMOUR_TEXTURE: Texture2D = Texture2D::from_file_with_format(
+        include_bytes!("../assets/armored_ferris-card.png"),
+        Some(ImageFormat::Png),
+    );
+    pub static ref CRAB_FOOD: Texture2D = Texture2D::from_file_with_format(
+        include_bytes!("../assets/crab-food.png"),
+        Some(ImageFormat::Png),
+    );
+    pub static ref SUPPLEMENTS: Texture2D = Texture2D::from_file_with_format(
+        include_bytes!("../assets/supplements.png"),
         Some(ImageFormat::Png),
     );
     pub static ref CARDS: [Card; 3] = [
@@ -12,7 +20,7 @@ lazy_static! {
             card_type: CardType::TempDamageReduction,
             card_width: 300.,
             card_height: 300. * 1.618034,
-            image: *CARD_TEXTURE,
+            image: *ARMOUR_TEXTURE,
             description: "Take 1 less damage from each enemy attack for the next brawl."
                 .to_string(),
         },
@@ -21,7 +29,7 @@ lazy_static! {
             card_type: CardType::TempHeal,
             card_width: 300.,
             card_height: 300. * 1.618034,
-            image: *CARD_TEXTURE,
+            image: *CRAB_FOOD,
             description: "Restore 40 health".to_string(),
         },
         Card {
@@ -29,7 +37,7 @@ lazy_static! {
             card_type: CardType::TempDamageReduction,
             card_width: 300.,
             card_height: 300. * 1.618034,
-            image: *CARD_TEXTURE,
+            image: *SUPPLEMENTS,
             description: "You need to type 10 fewer characters in the next brawl".to_string(),
         },
     ];
@@ -39,7 +47,7 @@ lazy_static! {
             card_type: CardType::TempDamageReduction,
             card_width: 300.,
             card_height: 300. * 1.618034,
-            image: *CARD_TEXTURE,
+            image: *SUPPLEMENTS,
             description: "You take less damage from enemy attacks".to_string(),
         },
         Card {
@@ -47,7 +55,7 @@ lazy_static! {
             card_type: CardType::TempHeal,
             card_width: 300.,
             card_height: 300. * 1.618034,
-            image: *CARD_TEXTURE,
+            image: *SUPPLEMENTS,
             description: "Increases your max health.".to_string(),
         },
         Card {
@@ -55,10 +63,18 @@ lazy_static! {
             card_type: CardType::TempDamageReduction,
             card_width: 300.,
             card_height: 300. * 1.618034,
-            image: *CARD_TEXTURE,
+            image: *SUPPLEMENTS,
             description: "You need fewer characters to defeat any enemy".to_string(),
         },
     ];
+}
+pub async fn load_treasure_images() {
+    let _ = *ARMOUR_TEXTURE;
+    println!("Armour card texture loaded");
+    let _ = *CRAB_FOOD;
+    println!("Crab food card texture loaded");
+    let _ = *SUPPLEMENTS;
+    println!("Supplement card texture loaded");
 }
 
 #[derive(Clone)]
@@ -95,13 +111,23 @@ impl Card {
                 ..Default::default()
             },
         );
-
         draw_rectangle(
             x,
             y + 0.15 * self.card_height,
             self.card_width,
             self.card_height / 2.,
-            GREEN,
+            WHITE,
+        );
+
+        draw_texture_ex(
+            self.image,
+            x,
+            y + 0.15 * self.card_height,
+            WHITE,
+            DrawTextureParams {
+                dest_size: Some(Vec2::from([self.card_width, self.card_height / 2.])),
+                ..Default::default()
+            },
         );
         let text_box_y = y + 0.15 * self.card_height + self.card_height / 2.;
         let text_box_height = self.card_height - 0.15 * self.card_height - self.card_height / 2.;

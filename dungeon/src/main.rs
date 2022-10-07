@@ -94,7 +94,8 @@ async fn main() {
                 join!(
                     load_sentences(),
                     load_combat_textures(),
-                    load_map_textures()
+                    load_map_textures(),
+                    load_treasure_images(),
                 );
                 game_state = GameState::MainMap;
             }
