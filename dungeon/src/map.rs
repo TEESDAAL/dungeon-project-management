@@ -13,6 +13,7 @@ const PLAYER_SIZE: f32 = NODE_SIZE / 1.5;
 const ENEMY_SIZE: f32 = NODE_SIZE / 1.5;
 const GOAL_SIZE: f32 = NODE_SIZE / 1.5;
 const TREASURE_SIZE: f32 = NODE_SIZE / 1.5;
+
 lazy_static! {
     pub static ref NUM_NODES: usize = (GRID_SIZE as f32).powf(1.5).round() as usize;
     pub static ref NUM_TREASURE: usize = max(1, (*NUM_NODES as f32 / 10.).round() as usize);
@@ -37,6 +38,14 @@ lazy_static! {
         include_bytes!("../assets/forest.png"),
         Some(ImageFormat::Png),
     );
+    pub static ref DESERT_BACKGROUND_TEXTURE: Texture2D = Texture2D::from_file_with_format(
+        include_bytes!("../assets/desert.png"),
+        Some(ImageFormat::Png),
+    );
+    pub static ref CAVERN_BACKGROUND_TEXTURE: Texture2D = Texture2D::from_file_with_format(
+        include_bytes!("../assets/cavern.png"),
+        Some(ImageFormat::Png),
+    );
     pub static ref TREASURE_TEXTURE: Texture2D = Texture2D::from_file_with_format(
         include_bytes!("../assets/treasure.png"),
         Some(ImageFormat::Png),
@@ -48,6 +57,8 @@ lazy_static! {
 }
 
 pub async fn load_map_textures() {
+    let _ = *NODE_TEXTURE;
+    println!("Map Node Texture loaded");
     let _ = *PLAYER_TEXTURE;
     println!("Map player texture loaded");
     let _ = *PLAYER_ARMOURED_TEXTURE;
@@ -56,10 +67,16 @@ pub async fn load_map_textures() {
     println!("Map enemy texture loaded");
     let _ = *NODE_TEXTURE;
     println!("Map node texture loaded");
+    let _ = *GOAL_TEXTURE;
+    println!("Map goal texture loaded");
     let _ = *TREASURE_TEXTURE;
     println!("Map treasure texture loaded");
     let _ = *FOREST_BACKGROUND_TEXTURE;
     println!("Background texture 1 loaded");
+    let _ = *DESERT_BACKGROUND_TEXTURE;
+    println!("Background texture 2 loaded");
+    let _ = *CAVERN_BACKGROUND_TEXTURE;
+    println!("Background texture 3 loaded");
 }
 
 enum ThingToDraw {
@@ -100,17 +117,25 @@ pub struct Graph {
     pub current_player_position: Option<usize>,
     pub goal_position: Option<usize>,
     pub player_path: Vec<usize>,
+    pub background_order: Vec<Texture2D>,
+    pub current_background: usize,
 }
 
 impl Graph {
     pub fn new() -> Graph {
-        // Create a default graph then add the nodes, connect them and specialise them
+        // Create a default graph then add the nodes, connect them and specialize them
         let mut graph = Graph {
             level: 0,
             nodes: Vec::new(),
             current_player_position: None,
             goal_position: None,
             player_path: Vec::new(),
+            background_order: vec![
+                *FOREST_BACKGROUND_TEXTURE,
+                *DESERT_BACKGROUND_TEXTURE,
+                *CAVERN_BACKGROUND_TEXTURE,
+            ],
+            current_background: 1,
         };
         graph.create_nodes();
         graph.connect_nodes();
@@ -475,7 +500,7 @@ impl Graph {
     }
 
     pub fn draw_terrain(&self) {
-        let texture = *FOREST_BACKGROUND_TEXTURE;
+        let texture = self.background_order[self.current_background];
         let scalar = screen_width() / texture.width();
         draw_texture_ex(
             texture,

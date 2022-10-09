@@ -4,7 +4,8 @@ use std::time::{Duration, Instant};
 
 pub const SENTENCE_UPPER_BOUND: usize = 110;
 pub const SENTENCE_LOWER_BOUND: usize = 90;
-
+pub const MAX_LINE_LENGTH: usize = 65;
+pub const CHAR_SPACING: usize = 22;
 pub struct Player {
     pub _stamina: i32,
     pub health: f32,
@@ -73,7 +74,21 @@ pub fn enter_combat_animation(_coords: (f32, f32), time: &mut Option<Instant>) -
     }
 }
 
+pub fn draw_combat_background() {
+    let skyline = screen_height() / 3.;
+    let sky_color = BLUE;
+    let ground_color = GREEN;
+    draw_rectangle(0., 0., screen_width(), skyline, sky_color);
+    draw_rectangle(
+        0.,
+        skyline,
+        screen_width(),
+        screen_height() - skyline,
+        ground_color,
+    );
+}
 pub fn draw_combat(sentence: &Vec<char>, player: &mut Player) -> State {
+    draw_combat_background();
     let player_sentence = &player.sentence;
     draw_text(
         &format!("Player Health: {}", player.health)[..],
@@ -174,7 +189,7 @@ pub fn return_lines(sentence: &Vec<char>, width: f32, font_size: u16) -> Vec<Str
     let mut lines: Vec<Vec<&str>> = Vec::new();
     for word in words {
         temp_line.push(word);
-        if measure_text(&temp_line.join(" ")[..], None, font_size, 1.).width > width {
+        if measure_text(&temp_line.join(" ")[..], None, font_size, 1.).width >= width {
             lines.push(line);
             line = vec![word];
             temp_line = line.clone();
@@ -189,9 +204,60 @@ pub fn return_lines(sentence: &Vec<char>, width: f32, font_size: u16) -> Vec<Str
     lines.iter().map(|line| line.join(" ")).collect()
 }
 
+fn draw_text_box(x: f32, y: f32, w: f32, h: f32) {
+    draw_rectangle(x, y, w, h, WHITE);
+
+    // Draw top two lines
+    draw_line(x, y - 10., x + w, y - 10., 3., BLACK);
+    draw_line(x, y, x + w, y, 3., BLACK);
+
+    // Draw bottom two lines
+    draw_line(x, y + h, x + w, y + h, 3., BLACK);
+    draw_line(x, y + h + 10., x + w, y + h + 10., 3., BLACK);
+
+    // Draw left two lines
+    draw_line(x, y, x, y + h, 3., BLACK);
+    draw_line(x - 10., y, x - 10., y + h, 3., BLACK);
+
+    // Draw right two lines
+    draw_line(x + w, y, x + w, y + h, 3., BLACK);
+    draw_line(x + w + 10., y, x + w + 10., y + h, 3., BLACK);
+
+    // Draw the top left diagonal lines
+    draw_line(x + 10., y - 20., x - 20., y + 10., 3., BLACK);
+    draw_line(x + 10., y - 10., x - 10., y + 10., 3., BLACK);
+
+    // Draw the top right diagonal lines
+    draw_line(x + w - 10., y - 20., x + w + 20., y + 10., 3., BLACK);
+    draw_line(x + w - 10., y - 10., x + w + 10., y + 10., 3., BLACK);
+
+    // Draw the bottom left diagonal lines
+    draw_line(x - 20., y + h - 10., x + 10., y + h + 20., 3., BLACK);
+    draw_line(x - 10., y + h - 10., x + 10., y + h + 10., 3., BLACK);
+
+    // Draw the bottom right diagonal lines
+    draw_line(
+        x + w + 20.,
+        y + h - 10.,
+        x + w - 10.,
+        y + h + 20.,
+        3.,
+        BLACK,
+    );
+    draw_line(
+        x + w + 10.,
+        y + h - 10.,
+        x + w - 10.,
+        y + h + 10.,
+        3.,
+        BLACK,
+    );
+}
+
 fn draw_sentence(sentence: &Vec<char>, user_sentence: &Vec<char>) {
     let mut char_pairs: Vec<(Option<&char>, Option<&char>)> = Vec::new();
     let mut i = 0;
+    let text_box_width = MAX_LINE_LENGTH as f32 * (CHAR_SPACING as f32 + 0.5);
     loop {
         let char_pair = (user_sentence.get(i), sentence.get(i));
         match char_pair {
@@ -202,25 +268,32 @@ fn draw_sentence(sentence: &Vec<char>, user_sentence: &Vec<char>) {
     }
     let font_size = 50.;
 
-    let x_upper_bound = screen_width() - 20.;
-    let mut line_lengths: Vec<usize> = return_lines(&sentence, x_upper_bound, font_size as u16)
+    let mut line_lengths: Vec<usize> = return_lines(&sentence, text_box_width, font_size as u16)
         .iter()
         .map(|line| line.len())
         .collect();
 
     let last_index = line_lengths.len() - 1;
-    line_lengths[last_index] = 82;
+    line_lengths[last_index] = MAX_LINE_LENGTH;
 
-    let spacing = 22;
-    let mut y_pos = font_size as f32 / 2. + 10.;
+    let mut y_pos = font_size as f32 / 2. + 40.;
     let mut num_lines = 0;
 
     let mut num_chars = 0;
+    let mut base_x_pos = 40.;
+    draw_text_box(
+        base_x_pos,
+        y_pos - font_size as f32 / 2.,
+        text_box_width,
+        font_size * line_lengths.len() as f32,
+    );
+    base_x_pos += 5.;
+    y_pos += 7.;
     for char_pair in char_pairs.iter() {
-        let x_pos = 10. + (spacing * num_chars) as f32;
+        let x_pos = base_x_pos + (CHAR_SPACING * num_chars) as f32;
         let line_length = match line_lengths.get(num_lines) {
             Some(length) => *length,
-            None => 82,
+            None => MAX_LINE_LENGTH,
         };
 
         let (c, color) = match *char_pair {
