@@ -100,6 +100,7 @@ async fn main() {
                 game_state = GameState::MainMap;
             }
             GameState::MainMap => {
+                get_char_pressed();
                 keyboard_actions(&mut graph);
                 mouse_events(&mut graph);
                 move_player(
@@ -111,7 +112,9 @@ async fn main() {
                 graph.draw_graph(&player.armoured);
             }
             GameState::EnterCombat => match enter_combat_animation((0., 0.), &mut entered_combat) {
-                State::Playing => (),
+                State::Playing => {
+                    get_char_pressed();
+                }
                 State::Finished => {
                     sentence = None;
                     let word_reduction = temp_words_reduction + perm_word_reduction;

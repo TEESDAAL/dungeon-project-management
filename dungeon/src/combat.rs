@@ -339,7 +339,10 @@ fn draw_sentence(sentence: &Vec<char>, user_sentence: &Vec<char>) {
 pub fn enemy_attack(player: &mut Player, last_attack: &mut Instant, damage_reduction: f32) {
     let enemy_attack_time = Duration::from_millis(2000);
     if last_attack.elapsed() >= enemy_attack_time {
-        player.health -= 3. - damage_reduction;
+        let damage = 3. - damage_reduction;
+        if damage < 0. {
+            player.health -= damage;
+        }
         *last_attack = Instant::now();
     }
 }
