@@ -1,11 +1,11 @@
 use lazy_static::lazy_static;
 use macroquad::prelude::*;
+use std::collections::HashSet;
+use std::env::consts::OS;
 use std::time::{Duration, Instant};
-
 pub const SENTENCE_UPPER_BOUND: usize = 110;
 pub const SENTENCE_LOWER_BOUND: usize = 90;
-pub const MAX_LINE_LENGTH: usize = 65;
-pub const CHAR_SPACING: usize = 22;
+
 pub struct Player {
     pub _stamina: i32,
     pub health: f32,
@@ -27,6 +27,9 @@ impl Player {
 }
 
 lazy_static! {
+    pub static ref MAX_LINE_LENGTH: usize = if OS == "windows" { 55 } else { 65 };
+    pub static ref FONT_SIZE: u16 = if OS == "windows" { 40 } else { 50 };
+    pub static ref CHAR_SPACING: usize = if OS == "windows" { 18 } else { 22 };
     pub static ref PLAYER_TEXTURE: Texture2D = Texture2D::from_file_with_format(
         include_bytes!("../assets/ferris-back.png"),
         Some(ImageFormat::Png),
@@ -181,7 +184,7 @@ pub fn draw_combat(sentence: &Vec<char>, player: &mut Player) -> State {
     }
 }
 
-pub fn return_lines(sentence: &Vec<char>, width: f32, font_size: u16) -> Vec<String> {
+pub fn return_lines(sentence: &Vec<char>) -> Vec<String> {
     let string_sentence = sentence.iter().collect::<String>();
     let words: Vec<&str> = string_sentence.split(' ').collect();
     let mut line: Vec<&str> = Vec::new();
@@ -189,7 +192,8 @@ pub fn return_lines(sentence: &Vec<char>, width: f32, font_size: u16) -> Vec<Str
     let mut lines: Vec<Vec<&str>> = Vec::new();
     for word in words {
         temp_line.push(word);
-        if measure_text(&temp_line.join(" ")[..], None, font_size, 1.).width >= width {
+        // if measure_text(&temp_line.join(" ")[..], None, *FONT_SIZE, 1.).width >= width {
+        if temp_line.join(" ").len() >= *MAX_LINE_LENGTH {
             lines.push(line);
             line = vec![word];
             temp_line = line.clone();
@@ -257,7 +261,7 @@ fn draw_text_box(x: f32, y: f32, w: f32, h: f32) {
 fn draw_sentence(sentence: &Vec<char>, user_sentence: &Vec<char>) {
     let mut char_pairs: Vec<(Option<&char>, Option<&char>)> = Vec::new();
     let mut i = 0;
-    let text_box_width = MAX_LINE_LENGTH as f32 * (CHAR_SPACING as f32 + 0.5);
+    let text_box_width = *MAX_LINE_LENGTH as f32 * (*CHAR_SPACING as f32 + 0.5);
     loop {
         let char_pair = (user_sentence.get(i), sentence.get(i));
         match char_pair {
@@ -266,34 +270,33 @@ fn draw_sentence(sentence: &Vec<char>, user_sentence: &Vec<char>) {
         }
         i += 1;
     }
-    let font_size = 50.;
 
-    let mut line_lengths: Vec<usize> = return_lines(&sentence, text_box_width, font_size as u16)
+    let mut line_lengths: Vec<usize> = return_lines(&sentence)
         .iter()
         .map(|line| line.len())
         .collect();
 
     let last_index = line_lengths.len() - 1;
-    line_lengths[last_index] = MAX_LINE_LENGTH;
+    line_lengths[last_index] = *MAX_LINE_LENGTH;
 
-    let mut y_pos = font_size as f32 / 2. + 40.;
+    let mut y_pos = *FONT_SIZE as f32 / 2. + 40.;
     let mut num_lines = 0;
 
     let mut num_chars = 0;
     let mut base_x_pos = 40.;
     draw_text_box(
         base_x_pos,
-        y_pos - font_size as f32 / 2.,
+        y_pos - *FONT_SIZE as f32 / 2.,
         text_box_width,
-        font_size * line_lengths.len() as f32,
+        *FONT_SIZE as f32 * line_lengths.len() as f32,
     );
     base_x_pos += 5.;
     y_pos += 7.;
     for char_pair in char_pairs.iter() {
-        let x_pos = base_x_pos + (CHAR_SPACING * num_chars) as f32;
+        let x_pos = base_x_pos + (*CHAR_SPACING * num_chars) as f32;
         let line_length = match line_lengths.get(num_lines) {
             Some(length) => *length,
-            None => MAX_LINE_LENGTH,
+            None => *MAX_LINE_LENGTH,
         };
 
         let (c, color) = match *char_pair {
@@ -317,7 +320,7 @@ fn draw_sentence(sentence: &Vec<char>, user_sentence: &Vec<char>) {
             x_pos,
             y_pos,
             TextParams {
-                font_size: font_size as u16,
+                font_size: *FONT_SIZE,
                 font_scale: 1.,
                 color,
                 ..Default::default()
@@ -328,7 +331,7 @@ fn draw_sentence(sentence: &Vec<char>, user_sentence: &Vec<char>) {
         if num_chars > line_length {
             num_chars = 0;
             num_lines += 1;
-            y_pos += font_size;
+            y_pos += *FONT_SIZE as f32;
         }
     }
 }
@@ -347,7 +350,7 @@ pub fn typing(
     time_since_last_delete: &mut Instant,
 ) {
     if let Some(c) = get_char_pressed() {
-        if c != '\u{8}' {
+        if !HashSet::from(['\u{8}', '\u{001B}']).contains(&c) {
             user_sentence.push(c);
         }
     }
