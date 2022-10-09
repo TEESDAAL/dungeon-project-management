@@ -135,7 +135,7 @@ impl Graph {
                 *DESERT_BACKGROUND_TEXTURE,
                 *CAVERN_BACKGROUND_TEXTURE,
             ],
-            current_background: 1,
+            current_background: 0,
         };
         graph.create_nodes();
         graph.connect_nodes();
