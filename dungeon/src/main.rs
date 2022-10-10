@@ -46,7 +46,8 @@ fn move_player(
         if last_move.elapsed() >= travel_time {
             let next_pos = graph.player_path.pop().unwrap();
             if next_pos == graph.goal_position.unwrap() {
-                *game_state = GameState::Rewarded(RewardType::EndOfLevel)
+                *game_state = GameState::Rewarded(RewardType::EndOfLevel);
+                graph.current_background += 1;
             }
             graph.move_player(next_pos);
             *last_move = Instant::now();
@@ -83,10 +84,35 @@ async fn main() {
     let mut deletion_state = DeletionState::FirstCharacter;
     let mut last_attack = Instant::now();
     let mut temp_damage_reduction = 0.0;
-    let mut perm_damage_reduction = 0.0;
+    let perm_damage_reduction = 0.0;
 
     let mut temp_words_reduction = 0;
-    let mut perm_word_reduction = 0;
+    let perm_word_reduction = 0;
+
+    let cards_and_coords = vec![
+        (
+            CARDS[0].clone(),
+            (
+                screen_width() / 2. - CARDS[0].card_width * 1.2 - CARDS[0].card_width / 2.,
+                screen_height() / 2. - CARDS[0].card_height / 2.,
+            ),
+        ),
+        (
+            CARDS[1].clone(),
+            (
+                screen_width() / 2. - CARDS[0].card_width / 2.,
+                screen_height() / 2. - CARDS[0].card_height / 2.,
+            ),
+        ),
+        (
+            CARDS[2].clone(),
+            (
+                screen_width() / 2. + CARDS[0].card_width * 1.2 - CARDS[0].card_width / 2.,
+                screen_height() / 2. - CARDS[0].card_height / 2.,
+            ),
+        ),
+    ];
+
     while player.health > 0.0 {
         clear_background(WHITE);
         match game_state {
@@ -145,7 +171,15 @@ async fn main() {
                     &mut deletion_state,
                     &mut time_since_last_delete,
                 );
-                match draw_combat(&test.unwrap(), &mut player) {
+                match {
+                    let level_info = &graph.background_order[graph.current_background];
+                    draw_combat(
+                        &test.unwrap(),
+                        &mut player,
+                        &level_info.sky_color,
+                        &level_info.ground_color,
+                    )
+                } {
                     State::Playing => (),
                     State::Finished => {
                         game_state = GameState::ExitCombat;
@@ -167,32 +201,6 @@ async fn main() {
             }
             GameState::Rewarded(_) => {
                 graph.draw_graph(&player.armoured);
-                let cards_and_coords = vec![
-                    (
-                        CARDS[0].clone(),
-                        (
-                            screen_width() / 2.
-                                - CARDS[0].card_width * 1.2
-                                - CARDS[0].card_width / 2.,
-                            screen_height() / 2. - CARDS[0].card_height / 2.,
-                        ),
-                    ),
-                    (
-                        CARDS[1].clone(),
-                        (
-                            screen_width() / 2. - CARDS[0].card_width / 2.,
-                            screen_height() / 2. - CARDS[0].card_height / 2.,
-                        ),
-                    ),
-                    (
-                        CARDS[2].clone(),
-                        (
-                            screen_width() / 2. + CARDS[0].card_width * 1.2
-                                - CARDS[0].card_width / 2.,
-                            screen_height() / 2. - CARDS[0].card_height / 2.,
-                        ),
-                    ),
-                ];
                 for (card, (x, y)) in &cards_and_coords {
                     card.draw_card(*x, *y);
                 }

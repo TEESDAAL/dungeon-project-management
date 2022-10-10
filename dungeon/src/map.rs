@@ -117,8 +117,14 @@ pub struct Graph {
     pub current_player_position: Option<usize>,
     pub goal_position: Option<usize>,
     pub player_path: Vec<usize>,
-    pub background_order: Vec<Texture2D>,
+    pub background_order: Vec<LevelInfo>,
     pub current_background: usize,
+}
+
+pub struct LevelInfo {
+    pub map_texture: Texture2D,
+    pub ground_color: Color,
+    pub sky_color: Color,
 }
 
 impl Graph {
@@ -131,9 +137,21 @@ impl Graph {
             goal_position: None,
             player_path: Vec::new(),
             background_order: vec![
-                *FOREST_BACKGROUND_TEXTURE,
-                *DESERT_BACKGROUND_TEXTURE,
-                *CAVERN_BACKGROUND_TEXTURE,
+                LevelInfo {
+                    map_texture: *FOREST_BACKGROUND_TEXTURE,
+                    ground_color: GREEN,
+                    sky_color: BLUE,
+                },
+                LevelInfo {
+                    map_texture: *DESERT_BACKGROUND_TEXTURE,
+                    ground_color: BEIGE,
+                    sky_color: DARKBLUE,
+                },
+                LevelInfo {
+                    map_texture: *CAVERN_BACKGROUND_TEXTURE,
+                    ground_color: GRAY,
+                    sky_color: BLACK,
+                },
             ],
             current_background: 0,
         };
@@ -500,7 +518,7 @@ impl Graph {
     }
 
     pub fn draw_terrain(&self) {
-        let texture = self.background_order[self.current_background];
+        let texture = self.background_order[self.current_background].map_texture;
         let scalar = screen_width() / texture.width();
         draw_texture_ex(
             texture,

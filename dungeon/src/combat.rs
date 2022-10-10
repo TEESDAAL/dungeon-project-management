@@ -77,21 +77,24 @@ pub fn enter_combat_animation(_coords: (f32, f32), time: &mut Option<Instant>) -
     }
 }
 
-pub fn draw_combat_background() {
+pub fn draw_combat_background(sky_color: &Color, ground_color: &Color) {
     let skyline = screen_height() / 3.;
-    let sky_color = BLUE;
-    let ground_color = GREEN;
-    draw_rectangle(0., 0., screen_width(), skyline, sky_color);
+    draw_rectangle(0., 0., screen_width(), skyline, *sky_color);
     draw_rectangle(
         0.,
         skyline,
         screen_width(),
         screen_height() - skyline,
-        ground_color,
+        *ground_color,
     );
 }
-pub fn draw_combat(sentence: &Vec<char>, player: &mut Player) -> State {
-    draw_combat_background();
+pub fn draw_combat(
+    sentence: &Vec<char>,
+    player: &mut Player,
+    sky_color: &Color,
+    ground_color: &Color,
+) -> State {
+    draw_combat_background(sky_color, ground_color);
     let player_sentence = &player.sentence;
     draw_text(
         &format!("Player Health: {}", player.health)[..],
