@@ -18,6 +18,7 @@ lazy_static! {
     pub static ref NUM_NODES: usize = (GRID_SIZE as f32).powf(1.5).round() as usize;
     pub static ref NUM_TREASURE: usize = max(1, (*NUM_NODES as f32 / 10.).round() as usize);
     pub static ref NUM_ENEMIES: usize = *NUM_NODES / 5;
+    // pub static ref NUM_ENEMIES: usize = 0;
     pub static ref NODE_TEXTURE: Texture2D = Texture2D::from_file_with_format(
         include_bytes!("../assets/node.png"),
         Some(ImageFormat::Png),
@@ -115,7 +116,6 @@ pub struct Graph {
     pub goal_position: Option<usize>,
     pub player_path: Vec<usize>,
     pub background_order: Vec<LevelInfo>,
-    pub current_background: usize,
 }
 
 pub struct LevelInfo {
@@ -150,7 +150,6 @@ impl Graph {
                     sky_color: BLACK,
                 },
             ],
-            current_background: 0,
         };
         graph.create_nodes();
         graph.connect_nodes();
@@ -514,8 +513,8 @@ impl Graph {
         }
     }
 
-    pub fn draw_terrain(&self) {
-        let texture = self.background_order[self.current_background].map_texture;
+    pub fn draw_terrain(&self, current_background: &usize) {
+        let texture = self.background_order[*current_background].map_texture;
         let scalar = screen_width() / texture.width();
         draw_texture_ex(
             texture,
@@ -532,10 +531,10 @@ impl Graph {
         );
     }
 
-    pub fn draw_graph(&self, armoured: &bool) {
+    pub fn draw_graph(&self, armoured: &bool, current_background: &usize) {
         let y_scalar = screen_height() / GRID_SIZE as f32;
         let x_scalar = screen_width() / GRID_SIZE as f32;
-        self.draw_terrain();
+        self.draw_terrain(current_background);
         self.draw_edges();
         for node in &self.nodes {
             let base_x = node.x as f32 * x_scalar + NODE_SIZE / 2.0;

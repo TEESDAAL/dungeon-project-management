@@ -35,6 +35,7 @@ fn move_player(
     last_move: &mut Instant,
     game_state: &mut GameState,
     entered_combat: &mut Option<Instant>,
+    current_background: &mut usize,
 ) {
     let movement_speed = 0.01;
     if graph.player_path.len() > 0 {
@@ -47,8 +48,8 @@ fn move_player(
             let next_pos = graph.player_path.pop().unwrap();
             if next_pos == graph.goal_position.unwrap() {
                 *game_state = GameState::Rewarded(RewardType::EndOfLevel);
-                graph.current_background += 1;
-                println!("{}", graph.current_background);
+                *current_background += 1;
+                // println!("{}", graph.current_background);
             }
             graph.move_player(next_pos);
             *last_move = Instant::now();
@@ -85,6 +86,7 @@ async fn main() {
     let mut deletion_state = DeletionState::FirstCharacter;
     let mut last_attack = Instant::now();
     let mut temp_damage_reduction = 0.0;
+    let mut current_background = 0;
     let perm_damage_reduction = 0.0;
 
     let mut temp_words_reduction = 0;
@@ -111,8 +113,9 @@ async fn main() {
                     &mut last_move,
                     &mut game_state,
                     &mut entered_combat,
+                    &mut current_background,
                 );
-                graph.draw_graph(&player.armoured);
+                graph.draw_graph(&player.armoured, &current_background);
             }
             GameState::EnterCombat => match enter_combat_animation((0., 0.), &mut entered_combat) {
                 State::Playing => {
@@ -149,7 +152,7 @@ async fn main() {
                     &mut time_since_last_delete,
                 );
                 match {
-                    let level_info = &graph.background_order[graph.current_background];
+                    let level_info = &graph.background_order[current_background];
                     draw_combat(
                         &test.unwrap(),
                         &mut player,
@@ -203,7 +206,7 @@ async fn main() {
                         ),
                     ),
                 ];
-                graph.draw_graph(&player.armoured);
+                graph.draw_graph(&player.armoured, &current_background);
                 for (card, (x, y)) in &cards_and_coords {
                     card.draw_card(*x, *y);
                 }
