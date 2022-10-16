@@ -48,6 +48,7 @@ fn move_player(
             if next_pos == graph.goal_position.unwrap() {
                 *game_state = GameState::Rewarded(RewardType::EndOfLevel);
                 graph.current_background += 1;
+                println!("{}", graph.current_background);
             }
             graph.move_player(next_pos);
             *last_move = Instant::now();
@@ -58,7 +59,7 @@ fn move_player(
                     *game_state = GameState::EnterCombat;
                     entered_combat.replace(Instant::now());
                 }
-                Tile::Treasure(_) => *game_state = GameState::Rewarded(RewardType::Treasure),
+                Tile::Treasure => *game_state = GameState::Rewarded(RewardType::Treasure),
             }
         }
     }
@@ -88,30 +89,6 @@ async fn main() {
 
     let mut temp_words_reduction = 0;
     let perm_word_reduction = 0;
-
-    let cards_and_coords = vec![
-        (
-            CARDS[0].clone(),
-            (
-                screen_width() / 2. - CARDS[0].card_width * 1.2 - CARDS[0].card_width / 2.,
-                screen_height() / 2. - CARDS[0].card_height / 2.,
-            ),
-        ),
-        (
-            CARDS[1].clone(),
-            (
-                screen_width() / 2. - CARDS[0].card_width / 2.,
-                screen_height() / 2. - CARDS[0].card_height / 2.,
-            ),
-        ),
-        (
-            CARDS[2].clone(),
-            (
-                screen_width() / 2. + CARDS[0].card_width * 1.2 - CARDS[0].card_width / 2.,
-                screen_height() / 2. - CARDS[0].card_height / 2.,
-            ),
-        ),
-    ];
 
     while player.health > 0.0 {
         clear_background(WHITE);
@@ -200,6 +177,32 @@ async fn main() {
                 }
             }
             GameState::Rewarded(_) => {
+                let cards_and_coords = vec![
+                    (
+                        CARDS[0].clone(),
+                        (
+                            screen_width() / 2.
+                                - CARDS[0].card_width * 1.2
+                                - CARDS[0].card_width / 2.,
+                            screen_height() / 2. - CARDS[0].card_height / 2.,
+                        ),
+                    ),
+                    (
+                        CARDS[1].clone(),
+                        (
+                            screen_width() / 2. - CARDS[0].card_width / 2.,
+                            screen_height() / 2. - CARDS[0].card_height / 2.,
+                        ),
+                    ),
+                    (
+                        CARDS[2].clone(),
+                        (
+                            screen_width() / 2. + CARDS[0].card_width * 1.2
+                                - CARDS[0].card_width / 2.,
+                            screen_height() / 2. - CARDS[0].card_height / 2.,
+                        ),
+                    ),
+                ];
                 graph.draw_graph(&player.armoured);
                 for (card, (x, y)) in &cards_and_coords {
                     card.draw_card(*x, *y);
@@ -220,6 +223,11 @@ async fn main() {
                             }
                             CardType::TempWordsReduce => temp_words_reduction += 10,
                         };
+                        if graph.nodes[graph.current_player_position.unwrap()].value
+                            == Tile::Treasure
+                        {
+                            graph.nodes[graph.current_player_position.unwrap()].value = Tile::Empty
+                        }
                         game_state = GameState::MainMap;
                     }
                     None => (),

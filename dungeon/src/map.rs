@@ -93,14 +93,11 @@ pub enum Tile {
     #[default]
     Empty,
     Enemy(Enemy),
-    Treasure(Treasure),
+    Treasure,
 }
 
 #[derive(Eq, PartialEq, Hash, Clone, Debug)]
 pub struct Enemy {}
-
-#[derive(Eq, PartialEq, Hash, Clone, Debug)]
-pub struct Treasure {}
 
 #[derive(Eq, Hash, PartialEq, Clone, Debug, Default)]
 pub struct Node {
@@ -327,7 +324,7 @@ impl Graph {
         let mut num_treasure = *NUM_TREASURE;
         for index in unpopulated_nodes.iter() {
             if self.nodes[*index].neighbors.len() == 1 {
-                self.nodes[*index].value = Tile::Treasure(Treasure {});
+                self.nodes[*index].value = Tile::Treasure;
                 num_treasure -= 1;
                 if num_treasure == 0 {
                     return;
@@ -335,7 +332,7 @@ impl Graph {
             }
         }
         for _ in 0..num_treasure {
-            self.nodes[unpopulated_nodes.pop().unwrap()].value = Tile::Treasure(Treasure {});
+            self.nodes[unpopulated_nodes.pop().unwrap()].value = Tile::Treasure;
         }
     }
     fn populate_board(&mut self) {
@@ -549,7 +546,7 @@ impl Graph {
             match node.value {
                 Tile::Empty => (),
                 Tile::Enemy(_) => self.draw_thing(ThingToDraw::Enemy, base_x, base_y),
-                Tile::Treasure(_) => self.draw_thing(ThingToDraw::Treasure, base_x, base_y),
+                Tile::Treasure => self.draw_thing(ThingToDraw::Treasure, base_x, base_y),
             }
 
             if self.current_player_position.unwrap() == node.index {
