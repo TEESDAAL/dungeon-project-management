@@ -853,12 +853,9 @@ pub async fn load_sentences() {
     println!("Sentences loaded");
 }
 
-pub fn return_sentence(length: usize) -> Option<String> {
+#[must_use] pub fn return_sentence(length: usize) -> Option<String> {
     match SENTENCES.get(&length) {
-        Some(vector) => match vector.choose(&mut rand::thread_rng()) {
-            Some(s) => Some(s.clone()),
-            None => None,
-        },
+        Some(vector) => vector.choose(&mut rand::thread_rng()).map(std::clone::Clone::clone),
         None => None,
     }
 }

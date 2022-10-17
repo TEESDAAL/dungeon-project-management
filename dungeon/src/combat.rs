@@ -15,7 +15,7 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new() -> Player {
+    #[must_use] pub fn new() -> Player {
         Player {
             _stamina: 50,
             health: 100.0,
@@ -187,7 +187,7 @@ pub fn draw_combat(
     }
 }
 
-pub fn return_lines(sentence: &Vec<char>) -> Vec<String> {
+#[must_use] pub fn return_lines(sentence: &Vec<char>) -> Vec<String> {
     let string_sentence = sentence.iter().collect::<String>();
     let words: Vec<&str> = string_sentence.split(' ').collect();
     let mut line: Vec<&str> = Vec::new();
@@ -274,28 +274,28 @@ fn draw_sentence(sentence: &Vec<char>, user_sentence: &Vec<char>) {
         i += 1;
     }
 
-    let mut line_lengths: Vec<usize> = return_lines(&sentence)
+    let mut line_lengths: Vec<usize> = return_lines(sentence)
         .iter()
-        .map(|line| line.len())
+        .map(std::string::String::len)
         .collect();
 
     let last_index = line_lengths.len() - 1;
     line_lengths[last_index] = *MAX_LINE_LENGTH;
 
-    let mut y_pos = *FONT_SIZE as f32 / 2. + 40.;
+    let mut y_pos = f32::from(*FONT_SIZE) / 2. + 40.;
     let mut num_lines = 0;
 
     let mut num_chars = 0;
     let mut base_x_pos = 40.;
     draw_text_box(
         base_x_pos,
-        y_pos - *FONT_SIZE as f32 / 2.,
+        y_pos - f32::from(*FONT_SIZE) / 2.,
         text_box_width,
-        *FONT_SIZE as f32 * line_lengths.len() as f32,
+        f32::from(*FONT_SIZE) * line_lengths.len() as f32,
     );
     base_x_pos += 5.;
     y_pos += 7.;
-    for char_pair in char_pairs.iter() {
+    for char_pair in &char_pairs {
         let x_pos = base_x_pos + (*CHAR_SPACING * num_chars) as f32;
         let line_length = match line_lengths.get(num_lines) {
             Some(length) => *length,
@@ -334,7 +334,7 @@ fn draw_sentence(sentence: &Vec<char>, user_sentence: &Vec<char>) {
         if num_chars > line_length {
             num_chars = 0;
             num_lines += 1;
-            y_pos += *FONT_SIZE as f32;
+            y_pos += f32::from(*FONT_SIZE);
         }
     }
 }

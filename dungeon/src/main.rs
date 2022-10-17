@@ -1,10 +1,10 @@
 pub mod map;
-use crate::map::*;
+use crate::map::{Graph, Tile, keyboard_actions, load_map_textures, mouse_events};
 pub mod combat;
-use crate::combat::*;
+use crate::combat::{DeletionState, Player, SENTENCE_LOWER_BOUND, SENTENCE_UPPER_BOUND, State, draw_combat, enemy_attack, enter_combat_animation, load_combat_textures, typing};
 pub mod sentences;
-use crate::sentences::*;
-use crate::treasure::*;
+use crate::sentences::{load_sentences, return_sentence};
+use crate::treasure::{CARDS, CardType, card_select, load_treasure_images};
 use ::rand::seq::SliceRandom;
 use futures::join;
 use macroquad::prelude::*;
@@ -38,7 +38,7 @@ fn move_player(
     current_background: &mut usize,
 ) {
     let movement_speed = 0.01;
-    if graph.player_path.len() > 0 {
+    if !graph.player_path.is_empty() {
         let distance = graph.distance(
             graph.current_player_position.unwrap(),
             *graph.player_path.last().unwrap(),
@@ -124,7 +124,7 @@ async fn main() {
                 State::Finished => {
                     sentence = None;
                     let word_reduction = temp_words_reduction + perm_word_reduction;
-                    while sentence == None {
+                    while sentence.is_none() {
                         let sentence_length = match ((SENTENCE_LOWER_BOUND - word_reduction)
                             ..(SENTENCE_UPPER_BOUND - word_reduction))
                             .collect::<Vec<usize>>()

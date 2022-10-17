@@ -125,7 +125,7 @@ pub struct LevelInfo {
 }
 
 impl Graph {
-    pub fn new() -> Graph {
+    #[must_use] pub fn new() -> Graph {
         // Create a default graph then add the nodes, connect them and specialize them
         let mut graph = Graph {
             level: 0,
@@ -173,7 +173,7 @@ impl Graph {
                 return Some(index);
             }
         }
-        return None;
+        None
     }
 
     fn distance_between_nodes(node_1: &Node, node_2: &Node) -> f32 {
@@ -182,7 +182,7 @@ impl Graph {
         .sqrt()
     }
 
-    pub fn closest_node(
+    #[must_use] pub fn closest_node(
         &self,
         node_indices: &Vec<usize>,
         current_node_index: &usize,
@@ -220,8 +220,8 @@ impl Graph {
             // Only add the nodes if it is a unique node
             if locations.insert((x, y)) {
                 self.add_node(Node {
-                    x: x,
-                    y: y,
+                    x,
+                    y,
                     index: self.nodes.len(),
                     ..Default::default()
                 });
@@ -240,15 +240,15 @@ impl Graph {
             None => return,
         });
 
-        while unconnected_nodes.len() > 0 {
+        while !unconnected_nodes.is_empty() {
             // Loop through all the nodes and link whichever node is closer
             let mut closest_distance = f32::INFINITY;
             let mut current_closest_node_pair: Option<(usize, usize)> = None;
 
             // Allows for more natural linking between nodes
             visited_nodes.shuffle(&mut ::rand::thread_rng());
-            for node_index in visited_nodes.iter() {
-                let closest_index = self.closest_node(&unconnected_nodes, &node_index).unwrap();
+            for node_index in &visited_nodes {
+                let closest_index = self.closest_node(&unconnected_nodes, node_index).unwrap();
                 let (closest_node, node) = (&self.nodes[closest_index], &self.nodes[*node_index]);
 
                 let distance = Self::distance_between_nodes(closest_node, node);
@@ -279,7 +279,7 @@ impl Graph {
                 break;
             }
         }
-        if self.current_player_position == None {
+        if self.current_player_position.is_none() {
             self.current_player_position = Some(unpopulated_nodes.pop().unwrap())
         }
     }
@@ -291,7 +291,7 @@ impl Graph {
                 break;
             }
         }
-        if self.goal_position == None {
+        if self.goal_position.is_none() {
             self.goal_position = Some(unpopulated_nodes.pop().unwrap())
         }
     }
@@ -303,8 +303,8 @@ impl Graph {
                 self.goal_position.unwrap(),
             );
             path.shuffle(&mut ::rand::thread_rng());
-            for index in path.iter() {
-                if unpopulated_nodes.contains(&index) {
+            for index in &path {
+                if unpopulated_nodes.contains(index) {
                     num_enemies -= 1;
                     self.nodes[*index].value = Tile::Enemy(Enemy {});
                     break;
@@ -344,7 +344,7 @@ impl Graph {
         self.add_enemies(&mut unpopulated_nodes);
     }
 
-    pub fn get_path(&self, start_node: usize, end_node: usize) -> Vec<usize> {
+    #[must_use] pub fn get_path(&self, start_node: usize, end_node: usize) -> Vec<usize> {
         // Open source code, written by Benjy under the MIT license.
         let mut parents: Vec<Option<usize>> = vec![None; self.nodes.len()];
         let mut nodes_to_visit: VecDeque<(usize, usize)> = VecDeque::new();
@@ -377,7 +377,7 @@ impl Graph {
     pub fn move_player(&mut self, index: usize) {
         self.nodes[self.current_player_position.unwrap()].value = Tile::Empty;
 
-        if index == self.goal_position.unwrap() && self.player_path.last() == None {
+        if index == self.goal_position.unwrap() && self.player_path.last().is_none() {
             self.reload();
             return;
         }
@@ -385,7 +385,7 @@ impl Graph {
         self.current_player_position = Some(index);
     }
 
-    pub fn distance(&self, index_1: usize, index_2: usize) -> f32 {
+    #[must_use] pub fn distance(&self, index_1: usize, index_2: usize) -> f32 {
         let (node_1, node_2) = (&self.nodes[index_1], &self.nodes[index_2]);
         (((node_1.x - node_2.x).pow(2) + (node_1.y - node_2.y).pow(2)) as f32).sqrt()
     }
@@ -396,8 +396,8 @@ impl Graph {
     fn draw_edges(&self) {
         let y_scalar = screen_height() / GRID_SIZE as f32;
         let x_scalar = screen_width() / GRID_SIZE as f32;
-        for node in self.nodes.iter() {
-            for neighbor in node.neighbors.iter() {
+        for node in &self.nodes {
+            for neighbor in &node.neighbors {
                 draw_line(
                     node.x as f32 * x_scalar + NODE_SIZE / 2.0,
                     node.y as f32 * y_scalar + NODE_SIZE / 2.0,
@@ -584,7 +584,7 @@ pub fn mouse_events(graph: &mut Graph) {
         );
         if let Some(end_node) = graph.get_node(x, y) {
             graph.player_path =
-                graph.get_path(graph.current_player_position.unwrap().clone(), end_node);
+                graph.get_path(graph.current_player_position.unwrap(), end_node);
         }
     }
 }
