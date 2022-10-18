@@ -848,14 +848,17 @@ lazy_static! {
     ]);
 }
 
-pub async fn load_sentences() {
+pub fn load_sentences() {
     let _ = *SENTENCES;
     println!("Sentences loaded");
 }
 
-#[must_use] pub fn return_sentence(length: usize) -> Option<String> {
+#[must_use]
+pub fn return_sentence(length: usize) -> Option<String> {
     match SENTENCES.get(&length) {
-        Some(vector) => vector.choose(&mut rand::thread_rng()).map(std::clone::Clone::clone),
+        Some(vector) => vector
+            .choose(&mut rand::thread_rng())
+            .map(std::clone::Clone::clone),
         None => None,
     }
 }

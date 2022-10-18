@@ -57,7 +57,7 @@ lazy_static! {
     );
 }
 
-pub async fn load_map_textures() {
+pub fn load_map_textures() {
     let _ = *NODE_TEXTURE;
     println!("Map Node Texture loaded");
     let _ = *PLAYER_TEXTURE;
@@ -80,6 +80,7 @@ pub async fn load_map_textures() {
     println!("Background texture 3 loaded");
 }
 
+#[derive(Clone, Copy)]
 enum ThingToDraw {
     Node,
     Player,
@@ -125,7 +126,8 @@ pub struct LevelInfo {
 }
 
 impl Graph {
-    #[must_use] pub fn new() -> Graph {
+    #[must_use]
+    pub fn new() -> Graph {
         // Create a default graph then add the nodes, connect them and specialize them
         let mut graph = Graph {
             level: 0,
@@ -182,7 +184,8 @@ impl Graph {
         .sqrt()
     }
 
-    #[must_use] pub fn closest_node(
+    #[must_use]
+    pub fn closest_node(
         &self,
         node_indices: &Vec<usize>,
         current_node_index: &usize,
@@ -344,7 +347,8 @@ impl Graph {
         self.add_enemies(&mut unpopulated_nodes);
     }
 
-    #[must_use] pub fn get_path(&self, start_node: usize, end_node: usize) -> Vec<usize> {
+    #[must_use]
+    pub fn get_path(&self, start_node: usize, end_node: usize) -> Vec<usize> {
         // Open source code, written by Benjy under the MIT license.
         let mut parents: Vec<Option<usize>> = vec![None; self.nodes.len()];
         let mut nodes_to_visit: VecDeque<(usize, usize)> = VecDeque::new();
@@ -385,7 +389,8 @@ impl Graph {
         self.current_player_position = Some(index);
     }
 
-    #[must_use] pub fn distance(&self, index_1: usize, index_2: usize) -> f32 {
+    #[must_use]
+    pub fn distance(&self, index_1: usize, index_2: usize) -> f32 {
         let (node_1, node_2) = (&self.nodes[index_1], &self.nodes[index_2]);
         (((node_1.x - node_2.x).pow(2) + (node_1.y - node_2.y).pow(2)) as f32).sqrt()
     }
@@ -583,8 +588,7 @@ pub fn mouse_events(graph: &mut Graph) {
                 .round() as isize,
         );
         if let Some(end_node) = graph.get_node(x, y) {
-            graph.player_path =
-                graph.get_path(graph.current_player_position.unwrap(), end_node);
+            graph.player_path = graph.get_path(graph.current_player_position.unwrap(), end_node);
         }
     }
 }

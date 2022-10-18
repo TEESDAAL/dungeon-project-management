@@ -1,12 +1,14 @@
 pub mod map;
-use crate::map::{Graph, Tile, keyboard_actions, load_map_textures, mouse_events};
+use crate::map::{keyboard_actions, load_map_textures, mouse_events, Graph, Tile};
 pub mod combat;
-use crate::combat::{DeletionState, Player, SENTENCE_LOWER_BOUND, SENTENCE_UPPER_BOUND, State, draw_combat, enemy_attack, enter_combat_animation, load_combat_textures, typing};
+use crate::combat::{
+    draw_combat, enemy_attack, enter_combat_animation, load_combat_textures, typing, DeletionState,
+    Player, State, SENTENCE_LOWER_BOUND, SENTENCE_UPPER_BOUND,
+};
 pub mod sentences;
 use crate::sentences::{load_sentences, return_sentence};
-use crate::treasure::{CARDS, CardType, card_select, load_treasure_images};
+use crate::treasure::{card_select, load_treasure_images, CardType, CARDS};
 use ::rand::seq::SliceRandom;
-use futures::join;
 use macroquad::prelude::*;
 use std::time::{Duration, Instant};
 pub mod treasure;
@@ -96,12 +98,10 @@ async fn main() {
         clear_background(WHITE);
         match game_state {
             GameState::LoadTextures => {
-                join!(
-                    load_sentences(),
-                    load_combat_textures(),
-                    load_map_textures(),
-                    load_treasure_images(),
-                );
+                load_map_textures();
+                    load_sentences();
+                    load_combat_textures();
+                    load_treasure_images();
                 game_state = GameState::MainMap;
             }
             GameState::MainMap => {
@@ -139,7 +139,7 @@ async fn main() {
                         });
                     }
                     last_attack = Instant::now();
-                    game_state = GameState::Combat
+                    game_state = GameState::Combat;
                 }
             },
             GameState::Combat => {
@@ -211,32 +211,27 @@ async fn main() {
                     card.draw_card(*x, *y);
                 }
 
-                match card_select(&cards_and_coords) {
-                    Some(card) => {
-                        match card.card_type {
-                            CardType::TempHeal => {
-                                player.health += 40.;
-                                if player.health > 100.0 {
-                                    player.health = 100.0;
-                                }
+                if let Some(card) = card_select(&cards_and_coords) {
+                    match card.card_type {
+                        CardType::TempHeal => {
+                            player.health += 40.;
+                            if player.health > 100.0 {
+                                player.health = 100.0;
                             }
-                            CardType::TempDamageReduction => {
-                                player.armoured = true;
-                                temp_damage_reduction += 1.
-                            }
-                            CardType::TempWordsReduce => temp_words_reduction += 10,
-                        };
-                        if graph.nodes[graph.current_player_position.unwrap()].value
-                            == Tile::Treasure
-                        {
-                            graph.nodes[graph.current_player_position.unwrap()].value = Tile::Empty
                         }
-                        game_state = GameState::MainMap;
+                        CardType::TempDamageReduction => {
+                            player.armoured = true;
+                            temp_damage_reduction += 1.;
+                        }
+                        CardType::TempWordsReduce => temp_words_reduction += 10,
+                    };
+                    if graph.nodes[graph.current_player_position.unwrap()].value == Tile::Treasure {
+                        graph.nodes[graph.current_player_position.unwrap()].value = Tile::Empty;
                     }
-                    None => (),
+                    game_state = GameState::MainMap;
                 }
             }
         }
-        next_frame().await
+        next_frame().await;
     }
 }

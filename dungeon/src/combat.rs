@@ -15,7 +15,8 @@ pub struct Player {
 }
 
 impl Player {
-    #[must_use] pub fn new() -> Player {
+    #[must_use]
+    pub fn new() -> Player {
         Player {
             _stamina: 50,
             health: 100.0,
@@ -58,7 +59,7 @@ pub enum State {
     Playing,
     Finished,
 }
-pub async fn load_combat_textures() {
+pub fn load_combat_textures() {
     let _ = *PLAYER_TEXTURE;
     println!("Player texture loaded");
     let _ = *ARMOURED_PLAYER_TEXTURE;
@@ -187,7 +188,8 @@ pub fn draw_combat(
     }
 }
 
-#[must_use] pub fn return_lines(sentence: &Vec<char>) -> Vec<String> {
+#[must_use]
+pub fn return_lines(sentence: &[char]) -> Vec<String> {
     let string_sentence = sentence.iter().collect::<String>();
     let words: Vec<&str> = string_sentence.split(' ').collect();
     let mut line: Vec<&str> = Vec::new();
@@ -261,7 +263,7 @@ fn draw_text_box(x: f32, y: f32, w: f32, h: f32) {
     );
 }
 
-fn draw_sentence(sentence: &Vec<char>, user_sentence: &Vec<char>) {
+fn draw_sentence(sentence: &[char], user_sentence: &[char]) {
     let mut char_pairs: Vec<(Option<&char>, Option<&char>)> = Vec::new();
     let mut i = 0;
     let text_box_width = *MAX_LINE_LENGTH as f32 * (*CHAR_SPACING as f32 + 0.5);

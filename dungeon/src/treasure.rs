@@ -68,7 +68,7 @@ lazy_static! {
         },
     ];
 }
-pub async fn load_treasure_images() {
+pub fn load_treasure_images() {
     let _ = *ARMOUR_TEXTURE;
     println!("Armour card texture loaded");
     let _ = *CRAB_FOOD;
@@ -179,7 +179,8 @@ impl Card {
     }
 }
 
-#[must_use] pub fn card_select(cards_and_coords: &Vec<(Card, (f32, f32))>) -> Option<&Card> {
+#[must_use]
+pub fn card_select(cards_and_coords: &[(Card, (f32, f32))]) -> Option<&Card> {
     if is_mouse_button_pressed(MouseButton::Left) {
         let (x_pos, y_pos) = mouse_position();
         for (card, (x, y)) in cards_and_coords.iter() {
