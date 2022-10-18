@@ -7,19 +7,17 @@ pub const SENTENCE_UPPER_BOUND: usize = 110;
 pub const SENTENCE_LOWER_BOUND: usize = 90;
 
 pub struct Player {
-    pub _stamina: i32,
     pub health: f32,
-    pub _defense: i32,
+    pub max_health: f32,
     pub sentence: Vec<char>,
     pub armoured: bool,
 }
 
 impl Player {
-    pub fn new() -> Player {
+    pub fn new() -> Self {
         Player {
-            _stamina: 50,
             health: 100.0,
-            _defense: 100,
+            max_health: 100.0,
             sentence: vec![],
             armoured: false,
         }
@@ -339,13 +337,19 @@ fn draw_sentence(sentence: &Vec<char>, user_sentence: &Vec<char>) {
     }
 }
 
-pub fn enemy_attack(player: &mut Player, last_attack: &mut Instant, damage_reduction: f32) {
+pub fn enemy_attack(
+    player: &mut Player,
+    last_attack: &mut Instant,
+    damage_reduction: &f32,
+    damage_percentage: &f32,
+) {
     let enemy_attack_time = Duration::from_millis(2000);
     if last_attack.elapsed() >= enemy_attack_time {
-        let damage = 3. - damage_reduction;
+        let damage = (3. * damage_percentage) - damage_reduction;
         if damage > 0. {
             player.health -= damage;
         }
+        player.health = (player.health * 100.).round() / 100.;
         *last_attack = Instant::now();
     }
 }
