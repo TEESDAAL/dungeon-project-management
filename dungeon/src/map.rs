@@ -81,7 +81,7 @@ pub fn load_map_textures() {
 }
 
 #[derive(Clone, Copy)]
-enum ThingToDraw {
+enum Sprite {
     Node,
     Player,
     PlayerArmoured,
@@ -123,6 +123,112 @@ pub struct LevelInfo {
     pub map_texture: Texture2D,
     pub ground_color: Color,
     pub sky_color: Color,
+}
+
+impl Sprite {
+    fn draw(&self, x: f32, y: f32) {
+        match self {
+            Sprite::Enemy => {
+                let enemy_shrink_factor = ENEMY_SIZE / ENEMY_TEXTURE.width();
+                draw_texture_ex(
+                    *ENEMY_TEXTURE,
+                    x - ENEMY_TEXTURE.width() * enemy_shrink_factor / 2.,
+                    y - ENEMY_TEXTURE.height() * enemy_shrink_factor / 2.,
+                    WHITE,
+                    DrawTextureParams {
+                        dest_size: Some(Vec2::from([
+                            ENEMY_TEXTURE.width() * enemy_shrink_factor,
+                            ENEMY_TEXTURE.height() * enemy_shrink_factor,
+                        ])),
+                        ..Default::default()
+                    },
+                );
+            }
+            Sprite::Player => {
+                let player_shrink_factor = PLAYER_SIZE / PLAYER_TEXTURE.width();
+
+                draw_texture_ex(
+                    *PLAYER_TEXTURE,
+                    x - PLAYER_TEXTURE.width() * player_shrink_factor / 2.,
+                    y - PLAYER_TEXTURE.height() * player_shrink_factor / 2.,
+                    WHITE,
+                    DrawTextureParams {
+                        dest_size: Some(Vec2::from([
+                            PLAYER_TEXTURE.width() * player_shrink_factor,
+                            PLAYER_TEXTURE.height() * player_shrink_factor,
+                        ])),
+                        ..Default::default()
+                    },
+                );
+            }
+            Sprite::PlayerArmoured => {
+                let player_shrink_factor = PLAYER_SIZE / PLAYER_ARMOURED_TEXTURE.width();
+
+                draw_texture_ex(
+                    *PLAYER_ARMOURED_TEXTURE,
+                    x - PLAYER_ARMOURED_TEXTURE.width() * player_shrink_factor / 2.,
+                    y - PLAYER_ARMOURED_TEXTURE.height() * player_shrink_factor / 2.,
+                    WHITE,
+                    DrawTextureParams {
+                        dest_size: Some(Vec2::from([
+                            PLAYER_ARMOURED_TEXTURE.width() * player_shrink_factor,
+                            PLAYER_ARMOURED_TEXTURE.height() * player_shrink_factor,
+                        ])),
+                        ..Default::default()
+                    },
+                );
+            }
+            Sprite::Goal => {
+                let goal_shrink_factor = GOAL_SIZE / GOAL_TEXTURE.width();
+
+                draw_texture_ex(
+                    *GOAL_TEXTURE,
+                    x - GOAL_TEXTURE.width() * goal_shrink_factor / 2.,
+                    y - GOAL_TEXTURE.height() * goal_shrink_factor / 2.,
+                    WHITE,
+                    DrawTextureParams {
+                        dest_size: Some(Vec2::from([
+                            GOAL_TEXTURE.width() * goal_shrink_factor,
+                            GOAL_TEXTURE.height() * goal_shrink_factor,
+                        ])),
+                        ..Default::default()
+                    },
+                );
+            }
+            Sprite::Node => {
+                let node_shrink_factor = NODE_SIZE / NODE_TEXTURE.width();
+                draw_texture_ex(
+                    *NODE_TEXTURE,
+                    x - NODE_TEXTURE.width() * node_shrink_factor / 2.,
+                    y - NODE_TEXTURE.height() * node_shrink_factor / 2.,
+                    WHITE,
+                    DrawTextureParams {
+                        dest_size: Some(Vec2::from([
+                            NODE_TEXTURE.width() * node_shrink_factor,
+                            NODE_TEXTURE.height() * node_shrink_factor,
+                        ])),
+                        ..Default::default()
+                    },
+                );
+            }
+            Sprite::Treasure => {
+                let treasure_shrink_factor = TREASURE_SIZE / TREASURE_TEXTURE.width();
+                draw_texture_ex(
+                    *TREASURE_TEXTURE,
+                    x - TREASURE_TEXTURE.width() * treasure_shrink_factor / 2.,
+                    y - TREASURE_TEXTURE.height() * treasure_shrink_factor / 2.,
+                    WHITE,
+                    DrawTextureParams {
+                        dest_size: Some(Vec2::from([
+                            TREASURE_TEXTURE.width() * treasure_shrink_factor,
+                            TREASURE_TEXTURE.height() * treasure_shrink_factor,
+                        ])),
+                        ..Default::default()
+                    },
+                );
+            }
+        }
+    }
 }
 
 impl Graph {
@@ -414,110 +520,7 @@ impl Graph {
             }
         }
     }
-    fn draw_thing(&self, thing_to_draw: ThingToDraw, x: f32, y: f32) {
-        match thing_to_draw {
-            ThingToDraw::Enemy => {
-                let enemy_shrink_factor = ENEMY_SIZE / ENEMY_TEXTURE.width();
-                draw_texture_ex(
-                    *ENEMY_TEXTURE,
-                    x - ENEMY_TEXTURE.width() * enemy_shrink_factor / 2.,
-                    y - ENEMY_TEXTURE.height() * enemy_shrink_factor / 2.,
-                    WHITE,
-                    DrawTextureParams {
-                        dest_size: Some(Vec2::from([
-                            ENEMY_TEXTURE.width() * enemy_shrink_factor,
-                            ENEMY_TEXTURE.height() * enemy_shrink_factor,
-                        ])),
-                        ..Default::default()
-                    },
-                );
-            }
-            ThingToDraw::Player => {
-                let player_shrink_factor = PLAYER_SIZE / PLAYER_TEXTURE.width();
-
-                draw_texture_ex(
-                    *PLAYER_TEXTURE,
-                    x - PLAYER_TEXTURE.width() * player_shrink_factor / 2.,
-                    y - PLAYER_TEXTURE.height() * player_shrink_factor / 2.,
-                    WHITE,
-                    DrawTextureParams {
-                        dest_size: Some(Vec2::from([
-                            PLAYER_TEXTURE.width() * player_shrink_factor,
-                            PLAYER_TEXTURE.height() * player_shrink_factor,
-                        ])),
-                        ..Default::default()
-                    },
-                );
-            }
-            ThingToDraw::PlayerArmoured => {
-                let player_shrink_factor = PLAYER_SIZE / PLAYER_ARMOURED_TEXTURE.width();
-
-                draw_texture_ex(
-                    *PLAYER_ARMOURED_TEXTURE,
-                    x - PLAYER_ARMOURED_TEXTURE.width() * player_shrink_factor / 2.,
-                    y - PLAYER_ARMOURED_TEXTURE.height() * player_shrink_factor / 2.,
-                    WHITE,
-                    DrawTextureParams {
-                        dest_size: Some(Vec2::from([
-                            PLAYER_ARMOURED_TEXTURE.width() * player_shrink_factor,
-                            PLAYER_ARMOURED_TEXTURE.height() * player_shrink_factor,
-                        ])),
-                        ..Default::default()
-                    },
-                );
-            }
-            ThingToDraw::Goal => {
-                let goal_shrink_factor = GOAL_SIZE / GOAL_TEXTURE.width();
-
-                draw_texture_ex(
-                    *GOAL_TEXTURE,
-                    x - GOAL_TEXTURE.width() * goal_shrink_factor / 2.,
-                    y - GOAL_TEXTURE.height() * goal_shrink_factor / 2.,
-                    WHITE,
-                    DrawTextureParams {
-                        dest_size: Some(Vec2::from([
-                            GOAL_TEXTURE.width() * goal_shrink_factor,
-                            GOAL_TEXTURE.height() * goal_shrink_factor,
-                        ])),
-                        ..Default::default()
-                    },
-                );
-            }
-            ThingToDraw::Node => {
-                let node_shrink_factor = NODE_SIZE / NODE_TEXTURE.width();
-                draw_texture_ex(
-                    *NODE_TEXTURE,
-                    x - NODE_TEXTURE.width() * node_shrink_factor / 2.,
-                    y - NODE_TEXTURE.height() * node_shrink_factor / 2.,
-                    WHITE,
-                    DrawTextureParams {
-                        dest_size: Some(Vec2::from([
-                            NODE_TEXTURE.width() * node_shrink_factor,
-                            NODE_TEXTURE.height() * node_shrink_factor,
-                        ])),
-                        ..Default::default()
-                    },
-                );
-            }
-            ThingToDraw::Treasure => {
-                let treasure_shrink_factor = TREASURE_SIZE / TREASURE_TEXTURE.width();
-                draw_texture_ex(
-                    *TREASURE_TEXTURE,
-                    x - TREASURE_TEXTURE.width() * treasure_shrink_factor / 2.,
-                    y - TREASURE_TEXTURE.height() * treasure_shrink_factor / 2.,
-                    WHITE,
-                    DrawTextureParams {
-                        dest_size: Some(Vec2::from([
-                            TREASURE_TEXTURE.width() * treasure_shrink_factor,
-                            TREASURE_TEXTURE.height() * treasure_shrink_factor,
-                        ])),
-                        ..Default::default()
-                    },
-                );
-            }
-        }
-    }
-
+    
     pub fn draw_terrain(&self, current_background: &usize) {
         let texture = self.background_order[*current_background].map_texture;
         let scalar = screen_width() / texture.width();
@@ -545,24 +548,24 @@ impl Graph {
             let base_x = node.x as f32 * x_scalar + NODE_SIZE / 2.0;
             let base_y = node.y as f32 * y_scalar + NODE_SIZE / 2.0;
 
-            self.draw_thing(ThingToDraw::Node, base_x, base_y);
+            Sprite::Node.draw(base_x, base_y);
 
             match node.value {
                 Tile::Empty => (),
-                Tile::Enemy(_) => self.draw_thing(ThingToDraw::Enemy, base_x, base_y),
-                Tile::Treasure => self.draw_thing(ThingToDraw::Treasure, base_x, base_y),
+                Tile::Enemy(_) => Sprite::Enemy.draw(base_x, base_y),
+                Tile::Treasure => Sprite::Treasure.draw(base_x, base_y),
             }
 
             if self.current_player_position.unwrap() == node.index {
                 if *armoured {
-                    self.draw_thing(ThingToDraw::PlayerArmoured, base_x, base_y);
+                    Sprite::PlayerArmoured.draw(base_x, base_y);
                 } else {
-                    self.draw_thing(ThingToDraw::Player, base_x, base_y);
+                    Sprite::Player.draw(base_x, base_y);
                 }
             }
 
             if self.goal_position.unwrap() == node.index {
-                self.draw_thing(ThingToDraw::Goal, base_x, base_y);
+                Sprite::Goal.draw(base_x, base_y);
             }
         }
     }
