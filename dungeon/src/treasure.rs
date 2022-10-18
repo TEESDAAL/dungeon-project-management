@@ -1,6 +1,16 @@
 use lazy_static::{initialize, lazy_static};
 use macroquad::prelude::*;
 
+#[derive(Clone)]
+pub enum CardType {
+    TempHeal,
+    TempWordsReduce,
+    TempDamageReduction,
+    PermHeal,
+    PermWordsReduce,
+    PermDamageReduction,
+}
+
 lazy_static! {
     pub static ref ARMOUR_TEXTURE: Texture2D = Texture2D::from_file_with_format(
         include_bytes!("../assets/armored_ferris-card.png"),
@@ -14,7 +24,19 @@ lazy_static! {
         include_bytes!("../assets/supplements.png"),
         Some(ImageFormat::Png),
     );
-    pub static ref CARDS: [Card; 3] = [
+    pub static ref STRENGTHENED_EXOSKELETON: Texture2D = Texture2D::from_file_with_format(
+        include_bytes!("../assets/stronger-armour.png"),
+        Some(ImageFormat::Png),
+    );
+    pub static ref BULK_UP: Texture2D = Texture2D::from_file_with_format(
+        include_bytes!("../assets/bulk-up.png"),
+        Some(ImageFormat::Png),
+    );
+    pub static ref SHARPER_CLAWS: Texture2D = Texture2D::from_file_with_format(
+        include_bytes!("../assets/sharper-claws.png"),
+        Some(ImageFormat::Png),
+    );
+    pub static ref TEMP_CARDS: [Card; 3] = [
         Card {
             title: "Stronger Armor".to_string(),
             card_type: CardType::TempDamageReduction,
@@ -41,40 +63,38 @@ lazy_static! {
             description: "You need to type 10 fewer characters in the next brawl".to_string(),
         },
     ];
-    pub static ref PERMANENT_CARDS: [Card; 3] = [
+    pub static ref PERM_CARDS: [Card; 3] = [
         Card {
-            title: "Strengthened Exoskeleton".to_string(),
-            card_type: CardType::TempDamageReduction,
+            title: "Stronger Carapace".to_string(),
+            card_type: CardType::PermDamageReduction,
             card_width: 300.,
             card_height: 300. * 1.618_034,
-            image: *SUPPLEMENTS,
-            description: "You take less damage from enemy attacks".to_string(),
+            image: *STRENGTHENED_EXOSKELETON,
+            description: "You take 5% less damage from enemy attacks".to_string(),
         },
         Card {
             title: "Bulked Up".to_string(),
-            card_type: CardType::TempHeal,
+            card_type: CardType::PermHeal,
             card_width: 300.,
             card_height: 300. * 1.618_034,
-            image: *SUPPLEMENTS,
-            description: "Increases your max health.".to_string(),
+            image: *BULK_UP,
+            description: "Increases your max health by 10%.".to_string(),
         },
         Card {
-            title: "Sharpened Pincers".to_string(),
-            card_type: CardType::TempDamageReduction,
+            title: "Sharpened Chelae".to_string(),
+            card_type: CardType::PermDamageReduction,
             card_width: 300.,
             card_height: 300. * 1.618_034,
-            image: *SUPPLEMENTS,
-            description: "You need fewer characters to defeat any enemy".to_string(),
+            image: *SHARPER_CLAWS,
+            description: "You need 10% fewer characters to defeat any enemy".to_string(),
         },
     ];
 }
-pub fn load_treasure_images() {
-    initialize(&ARMOUR_TEXTURE);
-    println!("Armour card texture loaded");
-    initialize(&CRAB_FOOD);
-    println!("Crab food card texture loaded");
-    initialize(&SUPPLEMENTS);
-    println!("Supplement card texture loaded");
+pub async fn load_treasure_images() {
+    initialize(&TEMP_CARDS);
+    println!("Temporary cards loaded");
+    initialize(&PERM_CARDS);
+    println!("Permanent cards loaded");
 }
 
 #[derive(Clone)]
@@ -87,24 +107,22 @@ pub struct Card {
     pub card_height: f32,
 }
 
-#[derive(Clone)]
-pub enum CardType {
-    TempHeal,
-    TempWordsReduce,
-    TempDamageReduction,
-}
-
 impl Card {
     pub fn draw_card(&self, x: f32, y: f32) {
         draw_rectangle(x, y, self.card_width, 0.15 * self.card_height, WHITE);
         draw_rectangle_lines(x, y, self.card_width, 0.15 * self.card_height, 5., BLACK);
-        let td = measure_text(&self.title[..], None, 40, 1.0);
+        let mut font_size = 40;
+        let mut td = measure_text(&self.title[..], None, font_size, 1.0);
+        while td.width + 10. > self.card_width {
+            font_size -= 5;
+            td = measure_text(&self.title[..], None, font_size, 1.0);
+        }
         draw_text_ex(
             &self.title[..],
             x - (td.width - self.card_width) / 2.,
             y + (0.15 * self.card_height) / 2. + td.height / 4.,
             TextParams {
-                font_size: 40,
+                font_size: font_size,
                 font_scale: 1.0,
                 color: BLACK,
                 font_scale_aspect: 1.0,
@@ -187,11 +205,9 @@ pub fn card_select(cards_and_coords: &[(Card, (f32, f32))]) -> Option<&Card> {
             if (x_pos >= *x && x_pos <= *x + card.card_width)
                 && (y_pos >= *y && y_pos <= *y + card.card_height)
             {
-                println!("{}", card.title);
                 return Some(card);
             }
         }
-        println!("No card selected");
     }
 
     None

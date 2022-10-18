@@ -47,6 +47,10 @@ lazy_static! {
         include_bytes!("../assets/cavern.png"),
         Some(ImageFormat::Png),
     );
+    pub static ref DUNGEON_BACKGROUND_TEXTURE: Texture2D = Texture2D::from_file_with_format(
+        include_bytes!("../assets/dungeon-background.png"),
+        Some(ImageFormat::Png),
+    );
     pub static ref TREASURE_TEXTURE: Texture2D = Texture2D::from_file_with_format(
         include_bytes!("../assets/treasure.png"),
         Some(ImageFormat::Png),
@@ -78,6 +82,8 @@ pub fn load_map_textures() {
     println!("Background texture 2 loaded");
     initialize(&CAVERN_BACKGROUND_TEXTURE);
     println!("Background texture 3 loaded");
+    let _ = *DUNGEON_BACKGROUND_TEXTURE;
+    println!("Background texture 4 loaded");
 }
 
 #[derive(Clone, Copy)]
@@ -111,7 +117,6 @@ pub struct Node {
 }
 
 pub struct Graph {
-    pub level: usize,
     pub nodes: Vec<Node>,
     pub current_player_position: Option<usize>,
     pub goal_position: Option<usize>,
@@ -159,7 +164,6 @@ impl Graph {
     pub fn new() -> Graph {
         // Create a default graph then add the nodes, connect them and specialize them
         let mut graph = Graph {
-            level: 0,
             nodes: Vec::new(),
             current_player_position: None,
             goal_position: None,
@@ -178,6 +182,11 @@ impl Graph {
                 LevelInfo {
                     map_texture: *CAVERN_BACKGROUND_TEXTURE,
                     ground_color: GRAY,
+                    sky_color: BLACK,
+                },
+                LevelInfo {
+                    map_texture: *DUNGEON_BACKGROUND_TEXTURE,
+                    ground_color: Color::from_rgba(149, 123, 111, 255),
                     sky_color: BLACK,
                 },
             ],
@@ -353,8 +362,10 @@ impl Graph {
     }
     fn add_treasure(&mut self, unpopulated_nodes: &mut Vec<usize>) {
         let mut num_treasure = *NUM_TREASURE;
+        let mut indices_to_remove = Vec::new();
         for index in unpopulated_nodes.iter() {
             if self.nodes[*index].neighbors.len() == 1 {
+                indices_to_remove.insert(0, *index);
                 self.nodes[*index].value = Tile::Treasure;
                 num_treasure -= 1;
                 if num_treasure == 0 {
@@ -362,6 +373,7 @@ impl Graph {
                 }
             }
         }
+        unpopulated_nodes.retain(|i| indices_to_remove.contains(i) == false);
         for _ in 0..num_treasure {
             self.nodes[unpopulated_nodes.pop().unwrap()].value = Tile::Treasure;
         }
@@ -491,12 +503,6 @@ impl Graph {
                 Sprite::Goal.draw(base_x, base_y);
             }
         }
-    }
-}
-
-pub fn keyboard_actions(graph: &mut Graph) {
-    if is_key_down(KeyCode::R) {
-        graph.reload();
     }
 }
 
