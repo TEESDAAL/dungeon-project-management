@@ -125,111 +125,34 @@ pub struct LevelInfo {
     pub sky_color: Color,
 }
 
-impl Sprite {
-    fn draw(&self, x: f32, y: f32) {
-        match self {
-            Sprite::Enemy => {
-                let enemy_shrink_factor = ENEMY_SIZE / ENEMY_TEXTURE.width();
-                draw_texture_ex(
-                    *ENEMY_TEXTURE,
-                    x - ENEMY_TEXTURE.width() * enemy_shrink_factor / 2.,
-                    y - ENEMY_TEXTURE.height() * enemy_shrink_factor / 2.,
-                    WHITE,
-                    DrawTextureParams {
-                        dest_size: Some(Vec2::from([
-                            ENEMY_TEXTURE.width() * enemy_shrink_factor,
-                            ENEMY_TEXTURE.height() * enemy_shrink_factor,
-                        ])),
-                        ..Default::default()
-                    },
-                );
-            }
-            Sprite::Player => {
-                let player_shrink_factor = PLAYER_SIZE / PLAYER_TEXTURE.width();
-
-                draw_texture_ex(
-                    *PLAYER_TEXTURE,
-                    x - PLAYER_TEXTURE.width() * player_shrink_factor / 2.,
-                    y - PLAYER_TEXTURE.height() * player_shrink_factor / 2.,
-                    WHITE,
-                    DrawTextureParams {
-                        dest_size: Some(Vec2::from([
-                            PLAYER_TEXTURE.width() * player_shrink_factor,
-                            PLAYER_TEXTURE.height() * player_shrink_factor,
-                        ])),
-                        ..Default::default()
-                    },
-                );
-            }
-            Sprite::PlayerArmoured => {
-                let player_shrink_factor = PLAYER_SIZE / PLAYER_ARMOURED_TEXTURE.width();
-
-                draw_texture_ex(
-                    *PLAYER_ARMOURED_TEXTURE,
-                    x - PLAYER_ARMOURED_TEXTURE.width() * player_shrink_factor / 2.,
-                    y - PLAYER_ARMOURED_TEXTURE.height() * player_shrink_factor / 2.,
-                    WHITE,
-                    DrawTextureParams {
-                        dest_size: Some(Vec2::from([
-                            PLAYER_ARMOURED_TEXTURE.width() * player_shrink_factor,
-                            PLAYER_ARMOURED_TEXTURE.height() * player_shrink_factor,
-                        ])),
-                        ..Default::default()
-                    },
-                );
-            }
-            Sprite::Goal => {
-                let goal_shrink_factor = GOAL_SIZE / GOAL_TEXTURE.width();
-
-                draw_texture_ex(
-                    *GOAL_TEXTURE,
-                    x - GOAL_TEXTURE.width() * goal_shrink_factor / 2.,
-                    y - GOAL_TEXTURE.height() * goal_shrink_factor / 2.,
-                    WHITE,
-                    DrawTextureParams {
-                        dest_size: Some(Vec2::from([
-                            GOAL_TEXTURE.width() * goal_shrink_factor,
-                            GOAL_TEXTURE.height() * goal_shrink_factor,
-                        ])),
-                        ..Default::default()
-                    },
-                );
-            }
-            Sprite::Node => {
-                let node_shrink_factor = NODE_SIZE / NODE_TEXTURE.width();
-                draw_texture_ex(
-                    *NODE_TEXTURE,
-                    x - NODE_TEXTURE.width() * node_shrink_factor / 2.,
-                    y - NODE_TEXTURE.height() * node_shrink_factor / 2.,
-                    WHITE,
-                    DrawTextureParams {
-                        dest_size: Some(Vec2::from([
-                            NODE_TEXTURE.width() * node_shrink_factor,
-                            NODE_TEXTURE.height() * node_shrink_factor,
-                        ])),
-                        ..Default::default()
-                    },
-                );
-            }
-            Sprite::Treasure => {
-                let treasure_shrink_factor = TREASURE_SIZE / TREASURE_TEXTURE.width();
-                draw_texture_ex(
-                    *TREASURE_TEXTURE,
-                    x - TREASURE_TEXTURE.width() * treasure_shrink_factor / 2.,
-                    y - TREASURE_TEXTURE.height() * treasure_shrink_factor / 2.,
-                    WHITE,
-                    DrawTextureParams {
-                        dest_size: Some(Vec2::from([
-                            TREASURE_TEXTURE.width() * treasure_shrink_factor,
-                            TREASURE_TEXTURE.height() * treasure_shrink_factor,
-                        ])),
-                        ..Default::default()
-                    },
-                );
+macro_rules! sprite_draw {
+    ($($sprite:ident => ($texture:ident, $size:ident)),*) => {
+        impl Sprite {
+            fn draw(&self, x: f32, y: f32) {
+                match self {
+                    $(Sprite::$sprite => {
+                        let shrink_factor = $size / $texture.width();
+                        draw_texture_ex(
+                            *$texture,
+                            x - $texture.width() * shrink_factor / 2.,
+                            y - $texture.height() * shrink_factor / 2.,
+                            WHITE,
+                            DrawTextureParams {
+                                dest_size: Some(Vec2::from([
+                                    $texture.width() * shrink_factor,
+                                    $texture.height() * shrink_factor,
+                                ])),
+                                ..Default::default()
+                            },
+                        );
+                    }),*
+                }
             }
         }
     }
 }
+
+sprite_draw!(Enemy => (ENEMY_TEXTURE, ENEMY_SIZE), Player => (PLAYER_TEXTURE, PLAYER_SIZE), PlayerArmoured => (PLAYER_ARMOURED_TEXTURE, PLAYER_SIZE), Goal => (GOAL_TEXTURE, GOAL_SIZE), Node => (NODE_TEXTURE, NODE_SIZE), Treasure => (TREASURE_TEXTURE, TREASURE_SIZE));
 
 impl Graph {
     #[must_use]
@@ -293,7 +216,7 @@ impl Graph {
     #[must_use]
     pub fn closest_node(
         &self,
-        node_indices: &Vec<usize>,
+        node_indices: &[usize],
         current_node_index: &usize,
     ) -> Option<usize> {
         // Converts the index into a reference to the current node

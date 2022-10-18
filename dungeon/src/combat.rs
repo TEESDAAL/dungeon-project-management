@@ -1,4 +1,4 @@
-use lazy_static::{lazy_static, initialize};
+use lazy_static::{initialize, lazy_static};
 use macroquad::prelude::*;
 use std::collections::HashSet;
 use std::env::consts::OS;
