@@ -14,7 +14,7 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new() -> Self {
+    #[must_use] pub fn new() -> Self {
         Self {
             health: 100.0,
             max_health: 100.0,

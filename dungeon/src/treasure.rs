@@ -90,7 +90,7 @@ lazy_static! {
         },
     ];
 }
-pub async fn load_treasure_images() {
+pub fn load_treasure_images() {
     initialize(&TEMP_CARDS);
     println!("Temporary cards loaded");
     initialize(&PERM_CARDS);
@@ -122,7 +122,7 @@ impl Card {
             x - (td.width - self.card_width) / 2.,
             y + (0.15 * self.card_height) / 2. + td.height / 4.,
             TextParams {
-                font_size: font_size,
+                font_size,
                 font_scale: 1.0,
                 color: BLACK,
                 font_scale_aspect: 1.0,

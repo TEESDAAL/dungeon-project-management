@@ -321,7 +321,7 @@ impl Graph {
             }
         }
         if self.current_player_position.is_none() {
-            self.current_player_position = Some(unpopulated_nodes.pop().unwrap())
+            self.current_player_position = Some(unpopulated_nodes.pop().unwrap());
         }
     }
     fn add_goal(&mut self, unpopulated_nodes: &mut Vec<usize>) {
@@ -333,7 +333,7 @@ impl Graph {
             }
         }
         if self.goal_position.is_none() {
-            self.goal_position = Some(unpopulated_nodes.pop().unwrap())
+            self.goal_position = Some(unpopulated_nodes.pop().unwrap());
         }
     }
     fn add_enemies(&mut self, unpopulated_nodes: &mut Vec<usize>) {
@@ -373,7 +373,7 @@ impl Graph {
                 }
             }
         }
-        unpopulated_nodes.retain(|i| indices_to_remove.contains(i) == false);
+        unpopulated_nodes.retain(|i| !indices_to_remove.contains(i));
         for _ in 0..num_treasure {
             self.nodes[unpopulated_nodes.pop().unwrap()].value = Tile::Treasure;
         }

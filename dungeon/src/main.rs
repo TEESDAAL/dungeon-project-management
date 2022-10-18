@@ -6,10 +6,10 @@ use crate::combat::{
     DeletionState, Player, SENTENCE_LOWER_BOUND, SENTENCE_UPPER_BOUND,
 };
 pub mod sentences;
-use crate::sentences::*;
-use crate::treasure::*;
+use crate::sentences::{load_sentences, return_sentence};
+use crate::treasure::{CardType, PERM_CARDS, TEMP_CARDS, card_select, load_treasure_images};
 pub mod end;
-use crate::end::*;
+use crate::end::{draw_death_screen, draw_victory_screen, restart};
 use ::rand::seq::SliceRandom;
 use macroquad::prelude::*;
 use std::time::{Duration, Instant};
@@ -165,7 +165,7 @@ async fn main() {
                     }
                     CombatState::Finished => {
                         stuff.sentence = None;
-                        while stuff.sentence == None {
+                        while stuff.sentence.is_none() {
                             let sentence_length = match (SENTENCE_LOWER_BOUND..SENTENCE_UPPER_BOUND)
                                 .collect::<Vec<usize>>()
                                 .choose(&mut ::rand::thread_rng())
