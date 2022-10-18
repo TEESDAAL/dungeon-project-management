@@ -55,7 +55,7 @@ pub enum DeletionState {
     EverythingElse,
 }
 
-pub enum State {
+pub enum CombatState {
     Playing,
     Finished,
 }
@@ -69,12 +69,12 @@ pub fn load_combat_textures() {
     initialize(&BASE_TEXTURE);
     println!("Base texture loaded");
 }
-pub fn enter_combat_animation(_coords: (f32, f32), time: &mut Option<Instant>) -> State {
+pub fn enter_combat_animation(_coords: (f32, f32), time: &mut Option<Instant>) -> CombatState {
     if time.unwrap().elapsed() < Duration::from_millis(1000) {
         draw_rectangle(0., 0., screen_width(), screen_height(), RED);
-        State::Playing
+        CombatState::Playing
     } else {
-        State::Finished
+        CombatState::Finished
     }
 }
 
@@ -94,7 +94,7 @@ pub fn draw_combat(
     player: &mut Player,
     sky_color: &Color,
     ground_color: &Color,
-) -> State {
+) -> CombatState {
     draw_combat_background(sky_color, ground_color);
     let player_sentence = &player.sentence;
     draw_text(
@@ -182,9 +182,9 @@ pub fn draw_combat(
     draw_sentence(sentence, player_sentence);
 
     if player_sentence == sentence {
-        State::Finished
+        CombatState::Finished
     } else {
-        State::Playing
+        CombatState::Playing
     }
 }
 
@@ -396,11 +396,11 @@ pub fn typing(
     }
 }
 
-pub fn exit_combat_animation(_coords: (f32, f32), time: &mut Option<Instant>) -> State {
+pub fn exit_combat_animation(_coords: (f32, f32), time: &mut Option<Instant>) -> CombatState {
     if time.unwrap().elapsed() < Duration::from_millis(1000) {
         draw_rectangle(0., 0., screen_width(), screen_height(), RED);
-        State::Playing
+        CombatState::Playing
     } else {
-        State::Finished
+        CombatState::Finished
     }
 }

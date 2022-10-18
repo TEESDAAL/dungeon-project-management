@@ -2,8 +2,8 @@ pub mod map;
 use crate::map::{keyboard_actions, load_map_textures, mouse_events, Graph, Tile};
 pub mod combat;
 use crate::combat::{
-    draw_combat, enemy_attack, enter_combat_animation, load_combat_textures, typing, DeletionState,
-    Player, State, SENTENCE_LOWER_BOUND, SENTENCE_UPPER_BOUND,
+    draw_combat, enemy_attack, enter_combat_animation, load_combat_textures, typing, CombatState,
+    DeletionState, Player, SENTENCE_LOWER_BOUND, SENTENCE_UPPER_BOUND,
 };
 pub mod sentences;
 use crate::sentences::{load_sentences, return_sentence};
@@ -17,6 +17,7 @@ enum RewardType {
     Treasure,
     EndOfLevel,
 }
+
 enum GameState {
     LoadTextures,
     MainMap,
@@ -24,12 +25,6 @@ enum GameState {
     Combat,
     ExitCombat,
     Rewarded(RewardType),
-}
-
-impl GameState {
-    fn new() -> GameState {
-        GameState::LoadTextures
-    }
 }
 
 fn move_player(
@@ -79,7 +74,7 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() {
     let mut player = Player::new();
-    let mut game_state = GameState::new();
+    let mut game_state = GameState::LoadTextures;
     let mut graph = Graph::new();
     let mut last_move = Instant::now();
     let mut entered_combat = None;
@@ -118,10 +113,10 @@ async fn main() {
                 graph.draw_graph(&player.armoured, &current_background);
             }
             GameState::EnterCombat => match enter_combat_animation((0., 0.), &mut entered_combat) {
-                State::Playing => {
+                CombatState::Playing => {
                     get_char_pressed();
                 }
-                State::Finished => {
+                CombatState::Finished => {
                     sentence = None;
                     let word_reduction = temp_words_reduction + perm_word_reduction;
                     while sentence.is_none() {
@@ -160,8 +155,8 @@ async fn main() {
                         &level_info.ground_color,
                     )
                 } {
-                    State::Playing => (),
-                    State::Finished => {
+                    CombatState::Playing => (),
+                    CombatState::Finished => {
                         game_state = GameState::ExitCombat;
                         player.sentence = Vec::new();
                     }
@@ -171,8 +166,8 @@ async fn main() {
                 temp_damage_reduction = 0.0;
                 player.armoured = false;
                 match enter_combat_animation((0., 0.), &mut entered_combat) {
-                    State::Playing => (),
-                    State::Finished => {
+                    CombatState::Playing => (),
+                    CombatState::Finished => {
                         graph.nodes[graph.current_player_position.unwrap()].value = Tile::Empty;
                         game_state = GameState::MainMap;
                         last_move = Instant::now();
