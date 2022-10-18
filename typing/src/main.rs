@@ -1,6 +1,9 @@
+// completely fine to do this, possible loss of precision will not affect macroquad code
+#![allow(clippy::cast_precision_loss)]
+
 use macroquad::prelude::*;
 
-fn draw_sentance(sentance: &Vec<char>, user_sentance: &mut Vec<char>) {
+fn draw_sentance(sentance: &[char], user_sentance: &mut [char]) {
     let mut char_pairs: Vec<(Option<&char>, Option<&char>)> = Vec::new();
     let mut i = 0;
     loop {
@@ -54,17 +57,16 @@ fn draw_sentance(sentance: &Vec<char>, user_sentance: &mut Vec<char>) {
                 }
             }
             (None, Some(s)) => {
-                draw_text(&s.to_string(), (spacing * i) as f32, 50., font_size, GRAY)
+                draw_text(&s.to_string(), (spacing * i) as f32, 50., font_size, GRAY);
             }
             (None, None) => break,
         }
     }
 }
 
-fn keyboard_events(user_sentance: &mut Vec<char>, num_iterations: &usize) {
-    match get_char_pressed() {
-        Some(c) => user_sentance.push(c),
-        None => (),
+fn keyboard_events(user_sentance: &mut Vec<char>, num_iterations: usize) {
+    if let Some(c) = get_char_pressed() {
+        user_sentance.push(c);
     }
     if is_key_down(KeyCode::Backspace) && num_iterations % 5 == 0 {
         user_sentance.pop();
@@ -78,8 +80,8 @@ async fn main() {
     let mut num_iterations: usize = 0;
     loop {
         num_iterations += 1;
-        keyboard_events(&mut user_sentance, &num_iterations);
+        keyboard_events(&mut user_sentance, num_iterations);
         draw_sentance(&sentance, &mut user_sentance);
-        next_frame().await
+        next_frame().await;
     }
 }
