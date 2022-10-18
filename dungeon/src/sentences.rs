@@ -1,4 +1,4 @@
-use lazy_static::lazy_static;
+use lazy_static::{initialize, lazy_static};
 use rand::seq::SliceRandom;
 use std::collections::HashMap;
 
@@ -849,7 +849,7 @@ lazy_static! {
 }
 
 pub fn load_sentences() {
-    let _ = *SENTENCES;
+    initialize(&SENTENCES);
     println!("Sentences loaded");
 }
 

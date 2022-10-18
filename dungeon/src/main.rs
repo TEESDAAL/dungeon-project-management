@@ -99,9 +99,9 @@ async fn main() {
         match game_state {
             GameState::LoadTextures => {
                 load_map_textures();
-                    load_sentences();
-                    load_combat_textures();
-                    load_treasure_images();
+                load_sentences();
+                load_combat_textures();
+                load_treasure_images();
                 game_state = GameState::MainMap;
             }
             GameState::MainMap => {

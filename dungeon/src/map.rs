@@ -1,5 +1,5 @@
 use ::rand::{seq::SliceRandom, Rng};
-use lazy_static::lazy_static;
+use lazy_static::{initialize, lazy_static};
 use macroquad::prelude::*;
 use std::{
     cmp::max,
@@ -58,25 +58,25 @@ lazy_static! {
 }
 
 pub fn load_map_textures() {
-    let _ = *NODE_TEXTURE;
+    initialize(&NODE_TEXTURE);
     println!("Map Node Texture loaded");
-    let _ = *PLAYER_TEXTURE;
+    initialize(&PLAYER_TEXTURE);
     println!("Map player texture loaded");
-    let _ = *PLAYER_ARMOURED_TEXTURE;
+    initialize(&PLAYER_ARMOURED_TEXTURE);
     println!("Map armoured player texture loaded");
-    let _ = *ENEMY_TEXTURE;
+    initialize(&ENEMY_TEXTURE);
     println!("Map enemy texture loaded");
-    let _ = *NODE_TEXTURE;
+    initialize(&NODE_TEXTURE);
     println!("Map node texture loaded");
-    let _ = *GOAL_TEXTURE;
+    initialize(&GOAL_TEXTURE);
     println!("Map goal texture loaded");
-    let _ = *TREASURE_TEXTURE;
+    initialize(&TREASURE_TEXTURE);
     println!("Map treasure texture loaded");
-    let _ = *FOREST_BACKGROUND_TEXTURE;
+    initialize(&FOREST_BACKGROUND_TEXTURE);
     println!("Background texture 1 loaded");
-    let _ = *DESERT_BACKGROUND_TEXTURE;
+    initialize(&DESERT_BACKGROUND_TEXTURE);
     println!("Background texture 2 loaded");
-    let _ = *CAVERN_BACKGROUND_TEXTURE;
+    initialize(&CAVERN_BACKGROUND_TEXTURE);
     println!("Background texture 3 loaded");
 }
 
@@ -520,7 +520,7 @@ impl Graph {
             }
         }
     }
-    
+
     pub fn draw_terrain(&self, current_background: &usize) {
         let texture = self.background_order[*current_background].map_texture;
         let scalar = screen_width() / texture.width();

@@ -1,4 +1,4 @@
-use lazy_static::lazy_static;
+use lazy_static::{lazy_static, initialize};
 use macroquad::prelude::*;
 use std::collections::HashSet;
 use std::env::consts::OS;
@@ -60,13 +60,13 @@ pub enum State {
     Finished,
 }
 pub fn load_combat_textures() {
-    let _ = *PLAYER_TEXTURE;
+    initialize(&PLAYER_TEXTURE);
     println!("Player texture loaded");
-    let _ = *ARMOURED_PLAYER_TEXTURE;
+    initialize(&ARMOURED_PLAYER_TEXTURE);
     println!("Armoured player texture loaded");
-    let _ = *ENEMY_TEXTURE;
+    initialize(&ENEMY_TEXTURE);
     println!("Enemy texture loaded");
-    let _ = *BASE_TEXTURE;
+    initialize(&BASE_TEXTURE);
     println!("Base texture loaded");
 }
 pub fn enter_combat_animation(_coords: (f32, f32), time: &mut Option<Instant>) -> State {

@@ -1,4 +1,4 @@
-use lazy_static::lazy_static;
+use lazy_static::{initialize, lazy_static};
 use macroquad::prelude::*;
 
 lazy_static! {
@@ -69,11 +69,11 @@ lazy_static! {
     ];
 }
 pub fn load_treasure_images() {
-    let _ = *ARMOUR_TEXTURE;
+    initialize(&ARMOUR_TEXTURE);
     println!("Armour card texture loaded");
-    let _ = *CRAB_FOOD;
+    initialize(&CRAB_FOOD);
     println!("Crab food card texture loaded");
-    let _ = *SUPPLEMENTS;
+    initialize(&SUPPLEMENTS);
     println!("Supplement card texture loaded");
 }
 
