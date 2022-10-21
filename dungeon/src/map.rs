@@ -182,7 +182,7 @@ impl Graph {
                 return Some(index);
             }
         }
-        return None;
+        None
     }
 
     fn distance_between_nodes(node_1: &Node, node_2: &Node) -> f32 {
@@ -230,8 +230,8 @@ impl Graph {
             // Only add the nodes if it is a unique node
             if locations.insert((x, y)) {
                 self.add_node(Node {
-                    x: x,
-                    y: y,
+                    x,
+                    y,
                     index: self.nodes.len(),
                     ..Default::default()
                 });
@@ -250,7 +250,7 @@ impl Graph {
             None => return,
         });
 
-        while unconnected_nodes.len() > 0 {
+        while !unconnected_nodes.is_empty() {
             // Loop through all the nodes and link whichever node is closer
             let mut closest_distance = f32::INFINITY;
             let mut current_closest_node_pair: Option<(usize, usize)> = None;
@@ -258,7 +258,7 @@ impl Graph {
             // Allows for more natural linking between nodes
             visited_nodes.shuffle(&mut ::rand::thread_rng());
             for node_index in visited_nodes.iter() {
-                let closest_index = self.closest_node(&unconnected_nodes, &node_index).unwrap();
+                let closest_index = self.closest_node(&unconnected_nodes, node_index).unwrap();
                 let (closest_node, node) = (&self.nodes[closest_index], &self.nodes[*node_index]);
 
                 let distance = Self::distance_between_nodes(closest_node, node);
@@ -314,7 +314,7 @@ impl Graph {
             );
             path.shuffle(&mut ::rand::thread_rng());
             for index in path.iter() {
-                if unpopulated_nodes.contains(&index) {
+                if unpopulated_nodes.contains(index) {
                     num_enemies -= 1;
                     self.nodes[*index].value = Tile::Enemy(Enemy {});
                     break;
@@ -342,7 +342,7 @@ impl Graph {
                 }
             }
         }
-        unpopulated_nodes.retain(|i| indices_to_remove.contains(i) == false);
+        unpopulated_nodes.retain(|i| !indices_to_remove.contains(i));
         for _ in 0..num_treasure {
             self.nodes[unpopulated_nodes.pop().unwrap()].value = Tile::Treasure;
         }
@@ -590,8 +590,7 @@ pub fn mouse_events(graph: &mut Graph) {
                 .round() as isize,
         );
         if let Some(end_node) = graph.get_node(x, y) {
-            graph.player_path =
-                graph.get_path(graph.current_player_position.unwrap().clone(), end_node);
+            graph.player_path = graph.get_path(graph.current_player_position.unwrap(), end_node);
         }
     }
 }

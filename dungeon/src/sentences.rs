@@ -855,10 +855,7 @@ pub async fn load_sentences() {
 
 pub fn return_sentence(length: usize) -> Option<String> {
     match SENTENCES.get(&length) {
-        Some(vector) => match vector.choose(&mut rand::thread_rng()) {
-            Some(s) => Some(s.clone()),
-            None => None,
-        },
+        Some(vector) => vector.choose(&mut rand::thread_rng()).cloned(),
         None => None,
     }
 }

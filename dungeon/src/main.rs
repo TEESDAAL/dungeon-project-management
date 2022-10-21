@@ -49,7 +49,7 @@ fn move_player(
     current_background: &mut usize,
 ) {
     let movement_speed = 0.01;
-    if graph.player_path.len() > 0 {
+    if !graph.player_path.is_empty() {
         let distance = graph.distance(
             graph.current_player_position.unwrap(),
             *graph.player_path.last().unwrap(),

@@ -122,7 +122,7 @@ impl Card {
             x - (td.width - self.card_width) / 2.,
             y + (0.15 * self.card_height) / 2. + td.height / 4.,
             TextParams {
-                font_size: font_size,
+                font_size,
                 font_scale: 1.0,
                 color: BLACK,
                 font_scale_aspect: 1.0,
@@ -160,7 +160,7 @@ impl Card {
     pub fn add_description(&self, x: f32, y: f32, width: f32) {
         let font_size = 30.;
         let mut num_lines: usize = 1;
-        let words: Vec<&str> = self.description.split(" ").collect();
+        let words: Vec<&str> = self.description.split(' ').collect();
         let mut line: Vec<&str> = Vec::new();
         let mut temp_line = line.clone();
         for word in words {

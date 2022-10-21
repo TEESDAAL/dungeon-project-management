@@ -272,7 +272,7 @@ fn draw_sentence(sentence: &Vec<char>, user_sentence: &Vec<char>) {
         i += 1;
     }
 
-    let mut line_lengths: Vec<usize> = return_lines(&sentence)
+    let mut line_lengths: Vec<usize> = return_lines(sentence)
         .iter()
         .map(|line| line.len())
         .collect();
