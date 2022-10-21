@@ -12,7 +12,6 @@ use futures::join;
 use macroquad::prelude::*;
 use std::time::{Duration, Instant};
 pub mod treasure;
-
 #[derive(Copy, Clone, PartialEq)]
 enum RewardType {
     Treasure,
@@ -122,12 +121,13 @@ impl Variables {
         }
     }
 }
+
 #[macroquad::main(window_conf)]
 async fn main() {
     let mut player = Player::new();
     let mut game_state = GameState::new();
     let mut graph = Graph::new();
-    let mut stuff = Variables::new();
+    let mut variables = Variables::new();
 
     loop {
         if player.health <= 0.0 {
@@ -149,39 +149,39 @@ async fn main() {
                 mouse_events(&mut graph);
                 move_player(
                     &mut graph,
-                    &mut stuff.last_move,
+                    &mut variables.last_move,
                     &mut game_state,
-                    &mut stuff.entered_combat,
-                    &mut stuff.current_background,
+                    &mut variables.entered_combat,
+                    &mut variables.current_background,
                 );
                 if game_state == GameState::MainMap {
-                    graph.draw_graph(&player.armoured, &stuff.current_background);
+                    graph.draw_graph(&player.armoured, &variables.current_background);
                 }
             }
             GameState::EnterCombat => {
-                match enter_combat_animation((0., 0.), &mut stuff.entered_combat) {
+                match enter_combat_animation((0., 0.), &mut variables.entered_combat) {
                     State::Playing => {
                         get_char_pressed();
                     }
                     State::Finished => {
-                        stuff.sentence = None;
-                        while stuff.sentence == None {
+                        variables.sentence = None;
+                        while variables.sentence == None {
                             let sentence_length = match (SENTENCE_LOWER_BOUND..SENTENCE_UPPER_BOUND)
                                 .collect::<Vec<usize>>()
                                 .choose(&mut ::rand::thread_rng())
                             {
-                                Some(length) => (*length as f32 * stuff.perm_word_reduction
-                                    - stuff.temp_words_reduction)
+                                Some(length) => (*length as f32 * variables.perm_word_reduction
+                                    - variables.temp_words_reduction)
                                     .floor()
                                     as usize,
                                 None => continue,
                             };
-                            stuff.sentence = Some(match return_sentence(sentence_length) {
+                            variables.sentence = Some(match return_sentence(sentence_length) {
                                 Some(sentence) => sentence.chars().collect(),
                                 None => continue,
                             });
                         }
-                        stuff.last_attack = Instant::now();
+                        variables.last_attack = Instant::now();
                         game_state = GameState::Combat
                     }
                 }
@@ -189,18 +189,18 @@ async fn main() {
             GameState::Combat => {
                 enemy_attack(
                     &mut player,
-                    &mut stuff.last_attack,
-                    &stuff.temp_damage_reduction,
-                    &stuff.perm_damage_reduction,
+                    &mut variables.last_attack,
+                    &variables.temp_damage_reduction,
+                    &variables.perm_damage_reduction,
                 );
-                let test = stuff.sentence.clone();
+                let test = variables.sentence.clone();
                 typing(
                     &mut player.sentence,
-                    &mut stuff.deletion_state,
-                    &mut stuff.time_since_last_delete,
+                    &mut variables.deletion_state,
+                    &mut variables.time_since_last_delete,
                 );
                 match {
-                    let level_info = &graph.background_order[stuff.current_background];
+                    let level_info = &graph.background_order[variables.current_background];
                     draw_combat(
                         &test.unwrap(),
                         &mut player,
@@ -216,15 +216,15 @@ async fn main() {
                 }
             }
             GameState::ExitCombat => {
-                stuff.temp_damage_reduction = 0.0;
+                variables.temp_damage_reduction = 0.0;
                 player.armoured = false;
-                stuff.num_enemies_defeated += 1;
-                match enter_combat_animation((0., 0.), &mut stuff.entered_combat) {
+                variables.num_enemies_defeated += 1;
+                match enter_combat_animation((0., 0.), &mut variables.entered_combat) {
                     State::Playing => (),
                     State::Finished => {
                         graph.nodes[graph.current_player_position.unwrap()].value = Tile::Empty;
                         game_state = GameState::MainMap;
-                        stuff.last_move = Instant::now();
+                        variables.last_move = Instant::now();
                     }
                 }
             }
@@ -259,7 +259,7 @@ async fn main() {
                         ),
                     ),
                 ];
-                graph.draw_graph(&player.armoured, &stuff.current_background);
+                graph.draw_graph(&player.armoured, &variables.current_background);
                 for (card, (x, y)) in &cards_and_coords {
                     card.draw_card(*x, *y);
                 }
@@ -275,12 +275,14 @@ async fn main() {
                             }
                             CardType::TempDamageReduction => {
                                 player.armoured = true;
-                                stuff.temp_damage_reduction += 1.
+                                variables.temp_damage_reduction += 1.
                             }
-                            CardType::TempWordsReduce => stuff.temp_words_reduction *= 0.90,
+                            CardType::TempWordsReduce => variables.temp_words_reduction *= 0.90,
                             CardType::PermHeal => player.max_health *= 1.10,
-                            CardType::PermDamageReduction => stuff.perm_damage_reduction *= 0.95,
-                            CardType::PermWordsReduce => stuff.perm_word_reduction *= 0.90,
+                            CardType::PermDamageReduction => {
+                                variables.perm_damage_reduction *= 0.95
+                            }
+                            CardType::PermWordsReduce => variables.perm_word_reduction *= 0.90,
                         };
                         if graph.nodes[graph.current_player_position.unwrap()].value
                             == Tile::Treasure
@@ -295,16 +297,16 @@ async fn main() {
             GameState::EndOfGame(end_type) => {
                 match end_type {
                     EndCondition::Death => draw_death_screen(
-                        &(stuff.current_background + 1),
-                        &stuff.num_enemies_defeated,
+                        &(variables.current_background + 1),
+                        &variables.num_enemies_defeated,
                     ),
-                    EndCondition::Success => draw_victory_screen(&stuff.num_enemies_defeated),
+                    EndCondition::Success => draw_victory_screen(&variables.num_enemies_defeated),
                 }
                 if restart() {
                     player = Player::new();
                     game_state = GameState::new();
                     graph = Graph::new();
-                    stuff = Variables::new();
+                    variables = Variables::new();
                 }
             }
         }

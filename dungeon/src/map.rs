@@ -188,6 +188,7 @@ impl Graph {
     fn distance_between_nodes(node_1: &Node, node_2: &Node) -> f32 {
         ((node_1.x as f32 - node_2.x as f32).powf(2.)
             + (node_1.y as f32 - node_2.y as f32).powf(2.))
+        .abs()
         .sqrt()
     }
 
