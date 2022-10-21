@@ -1,11 +1,11 @@
 use lazy_static::{initialize, lazy_static};
 use macroquad::prelude::*;
-use std::collections::HashSet;
+use regex::Regex;
 use std::env::consts::OS;
 use std::time::{Duration, Instant};
+
 pub const SENTENCE_UPPER_BOUND: usize = 110;
 pub const SENTENCE_LOWER_BOUND: usize = 90;
-
 pub struct Player {
     pub health: f32,
     pub max_health: f32,
@@ -366,7 +366,10 @@ pub fn typing(
     time_since_last_delete: &mut Instant,
 ) {
     if let Some(c) = get_char_pressed() {
-        if !HashSet::from(['\u{8}', '\u{001B}']).contains(&c) {
+        if Regex::new(r"[\x20-\x7e]")
+            .unwrap()
+            .is_match(&c.to_string()[..])
+        {
             user_sentence.push(c);
         }
     }
