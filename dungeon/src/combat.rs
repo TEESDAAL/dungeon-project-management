@@ -1,4 +1,4 @@
-use lazy_static::lazy_static;
+use lazy_static::{initialize, lazy_static};
 use macroquad::prelude::*;
 use std::collections::HashSet;
 use std::env::consts::OS;
@@ -11,6 +11,12 @@ pub struct Player {
     pub max_health: f32,
     pub sentence: Vec<char>,
     pub armoured: bool,
+}
+
+impl Default for Player {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Player {
@@ -52,26 +58,26 @@ pub enum DeletionState {
     EverythingElse,
 }
 
-pub enum State {
+pub enum CombatState {
     Playing,
     Finished,
 }
 pub async fn load_combat_textures() {
-    let _ = *PLAYER_TEXTURE;
+    initialize(&PLAYER_TEXTURE);
     println!("Player texture loaded");
-    let _ = *ARMOURED_PLAYER_TEXTURE;
+    initialize(&ARMOURED_PLAYER_TEXTURE);
     println!("Armoured player texture loaded");
-    let _ = *ENEMY_TEXTURE;
+    initialize(&ENEMY_TEXTURE);
     println!("Enemy texture loaded");
-    let _ = *BASE_TEXTURE;
+    initialize(&BASE_TEXTURE);
     println!("Base texture loaded");
 }
-pub fn enter_combat_animation(_coords: (f32, f32), time: &mut Option<Instant>) -> State {
+pub fn enter_combat_animation(_coords: (f32, f32), time: &mut Option<Instant>) -> CombatState {
     if time.unwrap().elapsed() < Duration::from_millis(1000) {
         draw_rectangle(0., 0., screen_width(), screen_height(), RED);
-        State::Playing
+        CombatState::Playing
     } else {
-        State::Finished
+        CombatState::Finished
     }
 }
 
@@ -87,11 +93,11 @@ pub fn draw_combat_background(sky_color: &Color, ground_color: &Color) {
     );
 }
 pub fn draw_combat(
-    sentence: &Vec<char>,
+    sentence: &[char],
     player: &mut Player,
     sky_color: &Color,
     ground_color: &Color,
-) -> State {
+) -> CombatState {
     draw_combat_background(sky_color, ground_color);
     let player_sentence = &player.sentence;
     draw_text(
@@ -179,13 +185,13 @@ pub fn draw_combat(
     draw_sentence(sentence, player_sentence);
 
     if player_sentence == sentence {
-        State::Finished
+        CombatState::Finished
     } else {
-        State::Playing
+        CombatState::Playing
     }
 }
 
-pub fn return_lines(sentence: &Vec<char>) -> Vec<String> {
+pub fn return_lines(sentence: &[char]) -> Vec<String> {
     let string_sentence = sentence.iter().collect::<String>();
     let words: Vec<&str> = string_sentence.split(' ').collect();
     let mut line: Vec<&str> = Vec::new();
@@ -259,7 +265,7 @@ fn draw_text_box(x: f32, y: f32, w: f32, h: f32) {
     );
 }
 
-fn draw_sentence(sentence: &Vec<char>, user_sentence: &Vec<char>) {
+fn draw_sentence(sentence: &[char], user_sentence: &[char]) {
     let mut char_pairs: Vec<(Option<&char>, Option<&char>)> = Vec::new();
     let mut i = 0;
     let text_box_width = *MAX_LINE_LENGTH as f32 * (*CHAR_SPACING as f32 + 0.5);
@@ -274,26 +280,26 @@ fn draw_sentence(sentence: &Vec<char>, user_sentence: &Vec<char>) {
 
     let mut line_lengths: Vec<usize> = return_lines(sentence)
         .iter()
-        .map(|line| line.len())
+        .map(std::string::String::len)
         .collect();
 
     let last_index = line_lengths.len() - 1;
     line_lengths[last_index] = *MAX_LINE_LENGTH;
 
-    let mut y_pos = *FONT_SIZE as f32 / 2. + 40.;
+    let mut y_pos = f32::from(*FONT_SIZE) / 2. + 40.;
     let mut num_lines = 0;
 
     let mut num_chars = 0;
     let mut base_x_pos = 40.;
     draw_text_box(
         base_x_pos,
-        y_pos - *FONT_SIZE as f32 / 2.,
+        y_pos - f32::from(*FONT_SIZE) / 2.,
         text_box_width,
-        *FONT_SIZE as f32 * line_lengths.len() as f32,
+        f32::from(*FONT_SIZE) * line_lengths.len() as f32,
     );
     base_x_pos += 5.;
     y_pos += 7.;
-    for char_pair in char_pairs.iter() {
+    for char_pair in &char_pairs {
         let x_pos = base_x_pos + (*CHAR_SPACING * num_chars) as f32;
         let line_length = match line_lengths.get(num_lines) {
             Some(length) => *length,
@@ -332,7 +338,7 @@ fn draw_sentence(sentence: &Vec<char>, user_sentence: &Vec<char>) {
         if num_chars > line_length {
             num_chars = 0;
             num_lines += 1;
-            y_pos += *FONT_SIZE as f32;
+            y_pos += f32::from(*FONT_SIZE);
         }
     }
 }
@@ -398,11 +404,11 @@ pub fn typing(
     }
 }
 
-pub fn exit_combat_animation(_coords: (f32, f32), time: &mut Option<Instant>) -> State {
+pub fn exit_combat_animation(_coords: (f32, f32), time: &mut Option<Instant>) -> CombatState {
     if time.unwrap().elapsed() < Duration::from_millis(1000) {
         draw_rectangle(0., 0., screen_width(), screen_height(), RED);
-        State::Playing
+        CombatState::Playing
     } else {
-        State::Finished
+        CombatState::Finished
     }
 }

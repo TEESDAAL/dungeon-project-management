@@ -1,4 +1,4 @@
-use lazy_static::lazy_static;
+use lazy_static::{initialize, lazy_static};
 use macroquad::prelude::*;
 const FERRIS_SIZE: f32 = 500.;
 
@@ -11,6 +11,13 @@ lazy_static! {
         include_bytes!("../assets/victorious-ferris.png"),
         Some(ImageFormat::Png),
     );
+}
+
+pub async fn load_end_images() {
+    initialize(&DEAD_FERRIS_TEXTURE);
+    println!("Loaded failure image");
+    initialize(&VICTORIOUS_FERRIS_TEXTURE);
+    println!("Loaded success image");
 }
 
 pub fn draw_death_screen(num_levels: &usize, num_enemies_defeated: &usize) {

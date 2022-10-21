@@ -1,6 +1,7 @@
-use lazy_static::lazy_static;
+use lazy_static::{initialize, lazy_static};
 use macroquad::prelude::*;
 
+const GOLDEN_RATIO: f32 = 1.618_034;
 #[derive(Clone)]
 pub enum CardType {
     TempHeal,
@@ -41,7 +42,7 @@ lazy_static! {
             title: "Stronger Armor".to_string(),
             card_type: CardType::TempDamageReduction,
             card_width: 300.,
-            card_height: 300. * 1.618034,
+            card_height: 300. * GOLDEN_RATIO,
             image: *ARMOUR_TEXTURE,
             description: "Take 1 less damage from each enemy attack for the next brawl."
                 .to_string(),
@@ -50,7 +51,7 @@ lazy_static! {
             title: "Crab Food".to_string(),
             card_type: CardType::TempHeal,
             card_width: 300.,
-            card_height: 300. * 1.618034,
+            card_height: 300. * GOLDEN_RATIO,
             image: *CRAB_FOOD,
             description: "Restore 40 health".to_string(),
         },
@@ -58,7 +59,7 @@ lazy_static! {
             title: "Supplements".to_string(),
             card_type: CardType::TempDamageReduction,
             card_width: 300.,
-            card_height: 300. * 1.618034,
+            card_height: 300. * GOLDEN_RATIO,
             image: *SUPPLEMENTS,
             description: "You need to type 10 fewer characters in the next brawl".to_string(),
         },
@@ -68,7 +69,7 @@ lazy_static! {
             title: "Stronger Carapace".to_string(),
             card_type: CardType::PermDamageReduction,
             card_width: 300.,
-            card_height: 300. * 1.618034,
+            card_height: 300. * GOLDEN_RATIO,
             image: *STRENGTHENED_EXOSKELETON,
             description: "You take 5% less damage from enemy attacks".to_string(),
         },
@@ -76,7 +77,7 @@ lazy_static! {
             title: "Bulked Up".to_string(),
             card_type: CardType::PermHeal,
             card_width: 300.,
-            card_height: 300. * 1.618034,
+            card_height: 300. * GOLDEN_RATIO,
             image: *BULK_UP,
             description: "Increases your max health by 10%.".to_string(),
         },
@@ -84,16 +85,16 @@ lazy_static! {
             title: "Sharpened Chelae".to_string(),
             card_type: CardType::PermDamageReduction,
             card_width: 300.,
-            card_height: 300. * 1.618034,
+            card_height: 300. * GOLDEN_RATIO,
             image: *SHARPER_CLAWS,
             description: "You need 10% fewer characters to defeat any enemy".to_string(),
         },
     ];
 }
 pub async fn load_treasure_images() {
-    let _ = *TEMP_CARDS;
+    initialize(&TEMP_CARDS);
     println!("Temporary cards loaded");
-    let _ = *PERM_CARDS;
+    initialize(&PERM_CARDS);
     println!("Permanent cards loaded");
 }
 
@@ -197,7 +198,7 @@ impl Card {
     }
 }
 
-pub fn card_select(cards_and_coords: &Vec<(Card, (f32, f32))>) -> Option<&Card> {
+pub fn card_select(cards_and_coords: &[(Card, (f32, f32))]) -> Option<&Card> {
     if is_mouse_button_pressed(MouseButton::Left) {
         let (x_pos, y_pos) = mouse_position();
         for (card, (x, y)) in cards_and_coords.iter() {
