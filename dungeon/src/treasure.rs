@@ -83,7 +83,7 @@ lazy_static! {
         },
         Card {
             title: "Sharpened Chelae".to_string(),
-            card_type: CardType::PermDamageReduction,
+            card_type: CardType::PermWordsReduce,
             card_width: 300.,
             card_height: 300. * GOLDEN_RATIO,
             image: *SHARPER_CLAWS,

@@ -141,7 +141,7 @@ impl GameState {
         }
     }
 
-    fn display_rewards(
+    fn display_and_select_rewards(
         &mut self,
         reward_type: RewardType,
         variables: &mut Variables,
@@ -322,19 +322,19 @@ async fn main() {
         clear_background(WHITE);
         match game_state {
             GameState::LoadTextures => game_state.load_textures().await,
-            GameState::MainMap => {
-                game_state.main_map_logic(&mut graph, &mut variables, &player);
-                if is_key_pressed(KeyCode::R) {
-                    graph.reload();
-                }
-            }
+            GameState::MainMap => game_state.main_map_logic(&mut graph, &mut variables, &player),
             GameState::EnterCombat => game_state.prepare_combat(&mut variables),
             GameState::Combat => game_state.combat_logic(&mut player, &mut variables, &graph),
             GameState::ExitCombat => {
                 game_state.exit_combat(&mut variables, &mut graph, &mut player);
             }
             GameState::Rewarded(reward_type) => {
-                game_state.display_rewards(reward_type, &mut variables, &mut graph, &mut player);
+                game_state.display_and_select_rewards(
+                    reward_type,
+                    &mut variables,
+                    &mut graph,
+                    &mut player,
+                );
             }
             GameState::EndOfGame(end_type) => {
                 game_state.display_end(&mut variables, &mut graph, end_type, &mut player);
