@@ -4,8 +4,8 @@ use regex::Regex;
 use std::env::consts::OS;
 use std::time::{Duration, Instant};
 
-pub const SENTENCE_UPPER_BOUND: usize = 110;
-pub const SENTENCE_LOWER_BOUND: usize = 90;
+pub const SENTENCE_UPPER_BOUND: usize = 70;
+pub const SENTENCE_LOWER_BOUND: usize = 60;
 pub struct Player {
     pub health: f32,
     pub max_health: f32,
@@ -182,7 +182,7 @@ pub fn draw_combat(
         },
     );
 
-    draw_sentence(sentence, player_sentence);
+    draw_sentence(sentence, player_sentence, sky_color);
 
     if player_sentence == sentence {
         CombatState::Finished
@@ -215,36 +215,37 @@ pub fn return_lines(sentence: &[char]) -> Vec<String> {
     lines.iter().map(|line| line.join(" ")).collect()
 }
 
-fn draw_text_box(x: f32, y: f32, w: f32, h: f32) {
+fn draw_text_box(x: f32, y: f32, w: f32, h: f32, sky_color: &Color) {
+    let color = if sky_color == &BLACK { WHITE } else { BLACK };
     draw_rectangle(x, y, w, h, WHITE);
 
     // Draw top two lines
-    draw_line(x, y - 10., x + w, y - 10., 3., BLACK);
-    draw_line(x, y, x + w, y, 3., BLACK);
+    draw_line(x, y - 10., x + w, y - 10., 3., color);
+    draw_line(x, y, x + w, y, 3., color);
 
     // Draw bottom two lines
-    draw_line(x, y + h, x + w, y + h, 3., BLACK);
-    draw_line(x, y + h + 10., x + w, y + h + 10., 3., BLACK);
+    draw_line(x, y + h, x + w, y + h, 3., color);
+    draw_line(x, y + h + 10., x + w, y + h + 10., 3., color);
 
     // Draw left two lines
-    draw_line(x, y, x, y + h, 3., BLACK);
-    draw_line(x - 10., y, x - 10., y + h, 3., BLACK);
+    draw_line(x, y, x, y + h, 3., color);
+    draw_line(x - 10., y, x - 10., y + h, 3., color);
 
     // Draw right two lines
-    draw_line(x + w, y, x + w, y + h, 3., BLACK);
-    draw_line(x + w + 10., y, x + w + 10., y + h, 3., BLACK);
+    draw_line(x + w, y, x + w, y + h, 3., color);
+    draw_line(x + w + 10., y, x + w + 10., y + h, 3., color);
 
     // Draw the top left diagonal lines
-    draw_line(x + 10., y - 20., x - 20., y + 10., 3., BLACK);
-    draw_line(x + 10., y - 10., x - 10., y + 10., 3., BLACK);
+    draw_line(x + 10., y - 20., x - 20., y + 10., 3., color);
+    draw_line(x + 10., y - 10., x - 10., y + 10., 3., color);
 
     // Draw the top right diagonal lines
-    draw_line(x + w - 10., y - 20., x + w + 20., y + 10., 3., BLACK);
-    draw_line(x + w - 10., y - 10., x + w + 10., y + 10., 3., BLACK);
+    draw_line(x + w - 10., y - 20., x + w + 20., y + 10., 3., color);
+    draw_line(x + w - 10., y - 10., x + w + 10., y + 10., 3., color);
 
     // Draw the bottom left diagonal lines
-    draw_line(x - 20., y + h - 10., x + 10., y + h + 20., 3., BLACK);
-    draw_line(x - 10., y + h - 10., x + 10., y + h + 10., 3., BLACK);
+    draw_line(x - 20., y + h - 10., x + 10., y + h + 20., 3., color);
+    draw_line(x - 10., y + h - 10., x + 10., y + h + 10., 3., color);
 
     // Draw the bottom right diagonal lines
     draw_line(
@@ -253,7 +254,7 @@ fn draw_text_box(x: f32, y: f32, w: f32, h: f32) {
         x + w - 10.,
         y + h + 20.,
         3.,
-        BLACK,
+        color,
     );
     draw_line(
         x + w + 10.,
@@ -261,11 +262,11 @@ fn draw_text_box(x: f32, y: f32, w: f32, h: f32) {
         x + w - 10.,
         y + h + 10.,
         3.,
-        BLACK,
+        color,
     );
 }
 
-fn draw_sentence(sentence: &[char], user_sentence: &[char]) {
+fn draw_sentence(sentence: &[char], user_sentence: &[char], sky_color: &Color) {
     let mut char_pairs: Vec<(Option<&char>, Option<&char>)> = Vec::new();
     let mut i = 0;
     let text_box_width = *MAX_LINE_LENGTH as f32 * (*CHAR_SPACING as f32 + 0.5);
@@ -296,6 +297,7 @@ fn draw_sentence(sentence: &[char], user_sentence: &[char]) {
         y_pos - f32::from(*FONT_SIZE) / 2.,
         text_box_width,
         f32::from(*FONT_SIZE) * line_lengths.len() as f32,
+        &sky_color,
     );
     base_x_pos += 5.;
     y_pos += 7.;
@@ -310,16 +312,16 @@ fn draw_sentence(sentence: &[char], user_sentence: &[char]) {
             (Some(c), Some(s)) => {
                 let character = if *c == ' ' { '⊔' } else { *c };
                 if c == s {
-                    (character, Color::from_rgba(0, 200, 0, 100))
+                    (character, Color::from_rgba(0, 182, 0, 255))
                 } else {
-                    (character, Color::from_rgba(200, 0, 0, 100))
+                    (character, Color::from_rgba(182, 0, 0, 255))
                 }
             }
             (Some(c), None) => {
                 let character = if *c == ' ' { '⊔' } else { *c };
-                (character, Color::from_rgba(200, 0, 0, 100))
+                (character, Color::from_rgba(182, 0, 0, 255))
             }
-            (None, Some(s)) => (*s, GRAY),
+            (None, Some(s)) => (*s, Color::from_rgba(0, 0, 0, 255)),
             (None, None) => break,
         };
         draw_text_ex(
@@ -355,7 +357,6 @@ pub fn enemy_attack(
         if damage > 0. {
             player.health -= damage;
         }
-        player.health = (player.health * 100.).round() / 100.;
         *last_attack = Instant::now();
     }
 }

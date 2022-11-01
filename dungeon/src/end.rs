@@ -79,6 +79,35 @@ pub fn draw_death_screen(num_levels: &usize, num_enemies_defeated: &usize) {
             ..Default::default()
         },
     );
+
+    let text = "Credit goes to; Renee French for the Go Gopher enemy design";
+    draw_text_ex(
+        text,
+        screen_width() / 2. - measure_text(text, None, font_size, 1.).width / 2.,
+        4. * screen_height() / 5. - (2 * font_size) as f32,
+        TextParams {
+            font_size,
+            font_scale: 1.0,
+            color: WHITE,
+            font_scale_aspect: 1.0,
+            ..Default::default()
+        },
+    );
+
+    let text =
+        "Karen Rustad Tölva for the design of the Ferris the crab, and Nim lang for the crown";
+    draw_text_ex(
+        text,
+        screen_width() / 2. - measure_text(text, None, font_size, 1.).width / 2.,
+        4. * screen_height() / 5. - font_size as f32,
+        TextParams {
+            font_size,
+            font_scale: 1.0,
+            color: WHITE,
+            font_scale_aspect: 1.0,
+            ..Default::default()
+        },
+    );
 }
 
 pub fn draw_victory_screen(num_enemies_defeated: &usize) {
@@ -119,6 +148,35 @@ pub fn draw_victory_screen(num_enemies_defeated: &usize) {
         screen_width() / 2.
             - measure_text("Press 'r' to play again", None, font_size, 1.).width / 2.,
         4. * screen_height() / 5.,
+        TextParams {
+            font_size,
+            font_scale: 1.0,
+            color: WHITE,
+            font_scale_aspect: 1.0,
+            ..Default::default()
+        },
+    );
+
+    let text = "Credit goes to; Renee French for the Go Gopher enemy design";
+    draw_text_ex(
+        text,
+        screen_width() / 2. - measure_text(text, None, font_size, 1.).width / 2.,
+        4. * screen_height() / 5. - (2 * font_size) as f32,
+        TextParams {
+            font_size,
+            font_scale: 1.0,
+            color: WHITE,
+            font_scale_aspect: 1.0,
+            ..Default::default()
+        },
+    );
+
+    let text =
+        "Karen Rustad Tölva for the design of the Ferris the crab, and Nim lang for the crown";
+    draw_text_ex(
+        text,
+        screen_width() / 2. - measure_text(text, None, font_size, 1.).width / 2.,
+        4. * screen_height() / 5. - font_size as f32,
         TextParams {
             font_size,
             font_scale: 1.0,

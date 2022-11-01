@@ -15,6 +15,7 @@ use futures::join;
 use macroquad::prelude::*;
 use std::time::{Duration, Instant};
 pub mod treasure;
+
 #[derive(Copy, Clone, PartialEq)]
 enum RewardType {
     Treasure,
@@ -81,7 +82,8 @@ impl GameState {
                         .collect::<Vec<usize>>()
                         .choose(&mut ::rand::thread_rng())
                     {
-                        Some(length) => (*length as f32 * variables.perm_word_reduction
+                        Some(length) => ((*length + 10 * variables.current_background) as f32
+                            * variables.perm_word_reduction
                             - variables.temp_words_reduction)
                             .floor() as usize,
                         None => continue,
@@ -316,6 +318,8 @@ async fn main() {
     let mut variables = Variables::default();
 
     loop {
+        player.health = (player.health * 100.).round() / 100.;
+
         if player.health <= 0.0 {
             game_state = GameState::EndOfGame(EndCondition::Death);
         }
