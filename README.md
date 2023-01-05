@@ -3,7 +3,7 @@
 A dungeon delver and typing tutor built using rust and the macroquad crate.
 
 # Compilation
-This game can be run by the following command `cargo run -r` or `cargo run --release`. While this game can be run in debug mode it will take quite a while to load initially.
+This game can be run by the following command `cargo run -r` or `cargo run --release` (from the dungeon directory). While this game can be run in debug mode it will take quite a while to load initially.
 
 ## Rules/Description
 
